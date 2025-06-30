@@ -1,0 +1,44 @@
+# Build artifacts
+/build/
+/out/
+/bin/
+/lib/
+/CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+/resources/
+
+# IDE / Editor files
+*.swp
+*.swo
+*.swn
+*~
+*.bak
+*.tmp
+.vscode/
+.idea/
+.clangd
+
+# clangd index and cache
+.cache/
+.clangd/
+.clangd/index/
+
+compile_commands.json
+.DS_Store
+*.d
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.log
+*.core
+core.*
+
+CTestTestfile.cmake
+CTestCostData.txt
+test_detail.xml
+*.user
+*.launch
+
