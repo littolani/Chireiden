@@ -1,5 +1,7 @@
 #include "Supervisor.h"
 
+Supervisor g_supervisor;
+
 int Supervisor::initializeDevices()
 {
 }
@@ -15,27 +17,27 @@ void Supervisor::releaseDinputIface()
     }
 }
 
-void Supervisor::enterCriticalSection(size_t i)
+void Supervisor::enterCriticalSection(size_t criticalSectionNumber)
 {
-    if (i >= 12)
+    if (criticalSectionNumber >= 12)
         return;
 
     if ((criticalSectionFlag & 0x8000) != 0)
     {
-        EnterCriticalSection(&criticalSections[i]);
-        ++criticalSectionCounters[i];
+        EnterCriticalSection(&criticalSections[criticalSectionNumber]);
+        ++criticalSectionCounters[criticalSectionNumber];
     }
 }
 
-void Supervisor::leaveCriticalSection(size_t i)
+void Supervisor::leaveCriticalSection(size_t criticalSectionNumber)
 {
-    if (i >= 12)
+    if (criticalSectionNumber >= 12)
         return;
 
     if ((criticalSectionFlag & 0x8000) != 0)
     {
-        LeaveCriticalSection(&criticalSections[i]);
-        --criticalSectionCounters[i];
+        LeaveCriticalSection(&criticalSections[criticalSectionNumber]);
+        --criticalSectionCounters[criticalSectionNumber];
     }
 }
 

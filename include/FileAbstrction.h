@@ -133,9 +133,9 @@ class CPbgFile : public IPbgFile
     virtual bool seek(DWORD offset, DWORD seekFrom);
 
     virtual HGLOBAL readWholeFile(DWORD maxSize);
-    static void getFullFilePath(char *buffer, const char *filename);
+    static void getFullFilePath(char* buffer, const char* filename);
 
-    DWORD readInt(int *outData)
+    DWORD readInt(int* outData)
     {
         return read(outData, 4);
     }
@@ -195,5 +195,10 @@ struct PbgArchive
     CPbgFile* m_fileAbstraction;
 };
 
+/* Globals */
+int createDirectory(LPCSTR pathName);
+int doesFileExist(LPCSTR filePath);
 int writeToFile(LPCSTR fileName, DWORD numBytes,LPCVOID bytes);
+int writeToFile(LPCSTR fileName, DWORD numBytes,LPVOID bytes);
 byte* openFile(char* filename, size_t* outSize, BOOL isExternalResource);
+PbgArchive* findMatchingArchive(const char* filename);

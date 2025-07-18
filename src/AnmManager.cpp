@@ -1,5 +1,5 @@
 #include "AnmManager.h"
-#include <AnmVm.h>
+#include "AnmVm.h"
 
 AnmManager* g_anmManager;
 
@@ -305,4 +305,19 @@ void AnmManager::blitTextureToSurface(BlitParams* blitParams)
     // Release resources
     textureSurface->Release();
     backBuffer->Release();
+}
+
+/* Globals */
+
+void blitTextures()
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        BlitParams* blitParams = &g_anmManager->blitParamsArray[i];
+        if (blitParams->anmLoadedIndex >= 0)
+        {
+            g_anmManager->blitTextureToSurface(blitParams);
+            blitParams->anmLoadedIndex = -1;
+        }
+    }
 }

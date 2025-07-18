@@ -130,7 +130,7 @@ void AnmLoaded::setupTextures()
         }
         scriptsLoaded = scriptsLoaded + anmHeader->numScripts;
         spritesLoaded = spritesLoaded + anmHeader->numSprites;
-        i = i + 1;
+        ++i;
         if (anmHeader->nextOffset == 0) 
             break;
         anm = anm + 1;

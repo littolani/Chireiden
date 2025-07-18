@@ -30,8 +30,9 @@ struct Supervisor
 
     int initializeDevices();
     void releaseDinputIface();
-    void enterCriticalSection(size_t i);
-    void leaveCriticalSection(size_t i);
+    void enterCriticalSection(size_t criticalSectionNumber);
+    void leaveCriticalSection(size_t criticalSectionNumber);
 
 };
 //ASSERT_SIZE(Supervisor, 0x9c0);
+extern Supervisor g_supervisor;

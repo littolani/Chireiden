@@ -1,5 +1,6 @@
 #include "FileAbstrction.h"
 #include "Globals.h"
+#include <winbase.h>
 
 int g_numEntriesInDatFile = 0;
 PbgArchive g_pbgArchives[20];
@@ -765,10 +766,9 @@ void PbgArchive::loadTh11Dat()
     }
 }
 
+/* Globals */
 
-
-/** Globals **/
-
+// 0x458400
 byte* openFile(char* filename, size_t* outSize, BOOL isExternalResource)
 {
     byte* outBuffer;
@@ -893,6 +893,7 @@ byte* openFile(char* filename, size_t* outSize, BOOL isExternalResource)
     }
 }
 
+// 0x458670
 int writeToFile(LPCSTR fileName, DWORD numBytes,LPVOID bytes)
 {
     DWORD dwMessageId;
@@ -977,6 +978,7 @@ PbgArchive* findMatchingArchive(const char* filename)
     return nullptr;
 }
 
+// 0x460885
 int createDirectory(LPCSTR pathName)
 {
     BOOL status = CreateDirectoryA(pathName, NULL);
@@ -986,6 +988,31 @@ int createDirectory(LPCSTR pathName)
         std::cerr << error << "\n";
         return -1;
     }
+    return 0;
+}
+
+// 0x4585e0
+int doesFileExist(LPCSTR filePath)
+{
+    g_supervisor.enterCriticalSection(2);
+    HANDLE fileHandle = CreateFileA(
+        filePath,
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        FILE_ATTRIBUTE_NORMAL,
+        NULL
+    );
+
+    if (fileHandle != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(fileHandle);
+        g_supervisor.leaveCriticalSection(2);
+        return 1;
+    }
+
+    g_supervisor.leaveCriticalSection(2);
     return 0;
 }
 

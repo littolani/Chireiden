@@ -36,14 +36,14 @@ ASSERT_SIZE(BlitParams, 0x28);
 class AnmManager
 {
 public:
-    int unk0;
-    uint32_t unk1[42];
+    BlitParams blitParamsArray[4]; // <0x0>
+    uint32_t unk[3]; // <0xa0>
     int refreshCounter;
     int vectorOffset0;
     int vectorOffset1;
     int unk3;
     AnmVm bulkVms[4096]; // <0xbc>
-    uint8_t bulkVmsIsAlive[4096];
+    uint8_t bulkVmsIsAlive[4096]; // <0x4340bc>
     int nextBulkVmIndex;
     AnmLoaded* loadedAnms[32]; // <0x4350c0>
     D3DXMATRIX matrix0;
@@ -71,7 +71,7 @@ public:
     AnmVm vmLayers[31];
     uint32_t q[3];
 
-    void preloadAnm(int anmIdx,char *anmFileName);
+    void preloadAnm(int anmIdx, char *anmFileName);
     void preloadAnmFromMemory(char* anmFilePath, int anmSlotIndex);
     void markAnmLoadedAsReleasedInVmList(AnmLoaded* anmLoaded);
     void releaseTextures();
@@ -86,4 +86,5 @@ private:
 };
 ASSERT_SIZE(AnmManager, 0x7bd894);
 
-
+/* Globals */
+void blitTextures();

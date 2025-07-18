@@ -5,7 +5,7 @@
 #include "Supervisor.h"
 #include "AnmManager.h"
 
-extern Supervisor g_supervisor;
+
 extern Chain* g_chain;
 extern HANDLE g_app;
 extern DWORD g_unusualLaunchFlag;
