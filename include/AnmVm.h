@@ -77,7 +77,7 @@ public:
     uint16_t anotherSpriteNumber;
     uint16_t scriptNumber;
     AnmRawInstruction* beginningOfScript;
-    AnmRawInstruction* currentInstr;
+    AnmRawInstruction* currentInstruction;
     AnmLoadedSprite* sprite;
     AnmLoaded* anmLoaded;
     int intVars[4]; // Script variables
@@ -103,5 +103,14 @@ public:
     void* dataForSpriteMappingFunc;
 
     void initialize();
+    void run();
+
+    // Placeholder functions
+    int getIntVar(int index) { return 0; }
+    float getFloatVar(int index) { return 0.0f; }
+    int* getIntVarPtr(int index) { return nullptr; }
+    float* getFloatVarPtr(int index) { return nullptr; }
+    int randInt(int min, int max) { return min; } // Placeholder
+    float randFloat(float min, float max) { return min; } // Placeholder
 };
 ASSERT_SIZE(AnmVm, 0x434);
