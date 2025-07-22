@@ -1,0 +1,2745 @@
+; AnmVm::getNextInstruction
+  44b2a0:	8d 90 f0 d8 ff ff    	lea    -0x2710(%eax),%edx
+  44b2a6:	83 fa 16             	cmp    $0x16,%edx
+  44b2a9:	0f 87 81 00 00 00    	ja     0x44b330
+  44b2af:	0f b6 92 64 b3 44 00 	movzbl 0x44b364(%edx),%edx
+  44b2b6:	ff 24 95 34 b3 44 00 	jmp    *0x44b334(,%edx,4)
+  44b2bd:	8b 81 b4 03 00 00    	mov    0x3b4(%ecx),%eax
+  44b2c3:	c3                   	ret
+  44b2c4:	8b 81 b8 03 00 00    	mov    0x3b8(%ecx),%eax
+  44b2ca:	c3                   	ret
+  44b2cb:	8b 81 bc 03 00 00    	mov    0x3bc(%ecx),%eax
+  44b2d1:	c3                   	ret
+  44b2d2:	8b 81 c0 03 00 00    	mov    0x3c0(%ecx),%eax
+  44b2d8:	c3                   	ret
+  44b2d9:	d9 81 c4 03 00 00    	flds   0x3c4(%ecx)
+  44b2df:	e9 fc b1 03 00       	jmp    0x4864e0
+  44b2e4:	d9 81 c8 03 00 00    	flds   0x3c8(%ecx)
+  44b2ea:	e9 f1 b1 03 00       	jmp    0x4864e0
+  44b2ef:	d9 81 cc 03 00 00    	flds   0x3cc(%ecx)
+  44b2f5:	e9 e6 b1 03 00       	jmp    0x4864e0
+  44b2fa:	d9 81 d0 03 00 00    	flds   0x3d0(%ecx)
+  44b300:	e9 db b1 03 00       	jmp    0x4864e0
+  44b305:	8b 81 d4 03 00 00    	mov    0x3d4(%ecx),%eax
+  44b30b:	c3                   	ret
+  44b30c:	8b 81 d8 03 00 00    	mov    0x3d8(%ecx),%eax
+  44b312:	c3                   	ret
+  44b313:	f7 81 04 04 00 00 00 	testl  $0x40000000,0x404(%ecx)
+  44b31a:	00 00 40 
+  44b31d:	56                   	push   %esi
+  44b31e:	be f8 2e 4c 00       	mov    $0x4c2ef8,%esi
+  44b323:	75 05                	jne    0x44b32a
+  44b325:	be 00 2f 4c 00       	mov    $0x4c2f00,%esi
+  44b32a:	e8 01 d9 00 00       	call   0x458c30 ; FUN_00458c30_getNextInstrRelated
+  44b32f:	5e                   	pop    %esi
+  44b330:	c3                   	ret
+
+; void FUN_00458c30_getNextInstrRelated(uint16_t *param_1)
+; {
+;   ushort uVar1;
+;   
+;   if ((g_supervisor.criticalSectionFlag & 0x8000) != 0) {
+;     EnterCriticalSection(g_supervisor.criticalSection + 10);
+;     g_supervisor.criticalSectionCounters[10] = g_supervisor.criticalSectionCounters[10] + '\x01';
+;   }
+;   *(int *)(param_1 + 2) = *(int *)(param_1 + 2) + 2;
+;   uVar1 = (*param_1 ^ 0x9630) + 0x9aad;
+;   uVar1 = ((uVar1 >> 0xe) + uVar1 * 4 ^ 0x9630) + 0x9aad;
+;   *param_1 = (uVar1 >> 0xe) + uVar1 * 4;
+;   if ((g_supervisor.criticalSectionFlag & 0x8000) != 0) {
+;     LeaveCriticalSection(g_supervisor.criticalSection + 10);
+;     g_supervisor.criticalSectionCounters[10] = g_supervisor.criticalSectionCounters[10] + 0xff;
+;   }
+;   return;
+; }
+
+
+; AnmVm::getFloat
+  44b080:	d9 44 24 04          	flds   0x4(%esp)
+  44b084:	56                   	push   %esi
+  44b085:	d9 c0                	fld    %st(0)
+  44b087:	8b f0                	mov    %eax,%esi
+  44b089:	e8 52 b4 03 00       	call   0x4864e0
+  44b08e:	05 f0 d8 ff ff       	add    $0xffffd8f0,%eax
+  44b093:	83 f8 16             	cmp    $0x16,%eax
+  44b096:	0f 87 9f 01 00 00    	ja     0x44b23b
+  44b09c:	ff 24 85 40 b2 44 00 	jmp    *0x44b240(,%eax,4)
+  44b0a3:	dd d8                	fstp   %st(0)
+  44b0a5:	db 86 b4 03 00 00    	fildl  0x3b4(%esi)
+  44b0ab:	5e                   	pop    %esi
+  44b0ac:	c2 04 00             	ret    $0x4
+  44b0af:	dd d8                	fstp   %st(0)
+  44b0b1:	db 86 b8 03 00 00    	fildl  0x3b8(%esi)
+  44b0b7:	5e                   	pop    %esi
+  44b0b8:	c2 04 00             	ret    $0x4
+  44b0bb:	dd d8                	fstp   %st(0)
+  44b0bd:	db 86 bc 03 00 00    	fildl  0x3bc(%esi)
+  44b0c3:	5e                   	pop    %esi
+  44b0c4:	c2 04 00             	ret    $0x4
+  44b0c7:	dd d8                	fstp   %st(0)
+  44b0c9:	db 86 c0 03 00 00    	fildl  0x3c0(%esi)
+  44b0cf:	5e                   	pop    %esi
+  44b0d0:	c2 04 00             	ret    $0x4
+  44b0d3:	dd d8                	fstp   %st(0)
+  44b0d5:	d9 86 c4 03 00 00    	flds   0x3c4(%esi)
+  44b0db:	5e                   	pop    %esi
+  44b0dc:	c2 04 00             	ret    $0x4
+  44b0df:	dd d8                	fstp   %st(0)
+  44b0e1:	d9 86 c8 03 00 00    	flds   0x3c8(%esi)
+  44b0e7:	5e                   	pop    %esi
+  44b0e8:	c2 04 00             	ret    $0x4
+  44b0eb:	dd d8                	fstp   %st(0)
+  44b0ed:	d9 86 cc 03 00 00    	flds   0x3cc(%esi)
+  44b0f3:	5e                   	pop    %esi
+  44b0f4:	c2 04 00             	ret    $0x4
+  44b0f7:	dd d8                	fstp   %st(0)
+  44b0f9:	d9 86 d0 03 00 00    	flds   0x3d0(%esi)
+  44b0ff:	5e                   	pop    %esi
+  44b100:	c2 04 00             	ret    $0x4
+  44b103:	dd d8                	fstp   %st(0)
+  44b105:	db 86 d4 03 00 00    	fildl  0x3d4(%esi)
+  44b10b:	5e                   	pop    %esi
+  44b10c:	c2 04 00             	ret    $0x4
+  44b10f:	dd d8                	fstp   %st(0)
+  44b111:	db 86 d8 03 00 00    	fildl  0x3d8(%esi)
+  44b117:	5e                   	pop    %esi
+  44b118:	c2 04 00             	ret    $0x4
+  44b11b:	f7 86 04 04 00 00 00 	testl  $0x40000000,0x404(%esi)
+  44b122:	00 00 40 
+  44b125:	dd d8                	fstp   %st(0)
+  44b127:	be f8 2e 4c 00       	mov    $0x4c2ef8,%esi
+  44b12c:	75 05                	jne    0x44b133
+  44b12e:	be 00 2f 4c 00       	mov    $0x4c2f00,%esi
+  44b133:	e8 68 dc 00 00       	call   0x458da0
+  44b138:	d9 5c 24 08          	fstps  0x8(%esp)
+  44b13c:	d9 44 24 08          	flds   0x8(%esp)
+  44b140:	5e                   	pop    %esi
+  44b141:	c2 04 00             	ret    $0x4
+  44b144:	f7 86 04 04 00 00 00 	testl  $0x40000000,0x404(%esi)
+  44b14b:	00 00 40 
+  44b14e:	dd d8                	fstp   %st(0)
+  44b150:	be f8 2e 4c 00       	mov    $0x4c2ef8,%esi
+  44b155:	75 05                	jne    0x44b15c
+  44b157:	be 00 2f 4c 00       	mov    $0x4c2f00,%esi
+  44b15c:	e8 6f dc 00 00       	call   0x458dd0
+  44b161:	d9 5c 24 08          	fstps  0x8(%esp)
+  44b165:	d9 44 24 08          	flds   0x8(%esp)
+  44b169:	5e                   	pop    %esi
+  44b16a:	c2 04 00             	ret    $0x4
+  44b16d:	f7 86 04 04 00 00 00 	testl  $0x40000000,0x404(%esi)
+  44b174:	00 00 40 
+  44b177:	dd d8                	fstp   %st(0)
+  44b179:	d9 05 f0 81 49 00    	flds   0x4981f0
+  44b17f:	51                   	push   %ecx
+  44b180:	d9 1c 24             	fstps  (%esp)
+  44b183:	be f8 2e 4c 00       	mov    $0x4c2ef8,%esi
+  44b188:	75 05                	jne    0x44b18f
+  44b18a:	be 00 2f 4c 00       	mov    $0x4c2f00,%esi
+  44b18f:	e8 0c bf fb ff       	call   0x4070a0
+  44b194:	d9 5c 24 08          	fstps  0x8(%esp)
+  44b198:	d9 44 24 08          	flds   0x8(%esp)
+  44b19c:	5e                   	pop    %esi
+  44b19d:	c2 04 00             	ret    $0x4
+  44b1a0:	dd d8                	fstp   %st(0)
+  44b1a2:	d9 86 dc 03 00 00    	flds   0x3dc(%esi)
+  44b1a8:	5e                   	pop    %esi
+  44b1a9:	c2 04 00             	ret    $0x4
+  44b1ac:	dd d8                	fstp   %st(0)
+  44b1ae:	d9 86 e0 03 00 00    	flds   0x3e0(%esi)
+  44b1b4:	5e                   	pop    %esi
+  44b1b5:	c2 04 00             	ret    $0x4
+  44b1b8:	dd d8                	fstp   %st(0)
+  44b1ba:	d9 86 e4 03 00 00    	flds   0x3e4(%esi)
+  44b1c0:	5e                   	pop    %esi
+  44b1c1:	c2 04 00             	ret    $0x4
+  44b1c4:	dd d8                	fstp   %st(0)
+  44b1c6:	5e                   	pop    %esi
+  44b1c7:	d9 05 b4 36 4c 00    	flds   0x4c36b4
+  44b1cd:	c2 04 00             	ret    $0x4
+  44b1d0:	dd d8                	fstp   %st(0)
+  44b1d2:	5e                   	pop    %esi
+  44b1d3:	d9 05 b8 36 4c 00    	flds   0x4c36b8
+  44b1d9:	c2 04 00             	ret    $0x4
+  44b1dc:	dd d8                	fstp   %st(0)
+  44b1de:	5e                   	pop    %esi
+  44b1df:	d9 05 bc 36 4c 00    	flds   0x4c36bc
+  44b1e5:	c2 04 00             	ret    $0x4
+  44b1e8:	dd d8                	fstp   %st(0)
+  44b1ea:	5e                   	pop    %esi
+  44b1eb:	d9 05 d8 36 4c 00    	flds   0x4c36d8
+  44b1f1:	c2 04 00             	ret    $0x4
+  44b1f4:	dd d8                	fstp   %st(0)
+  44b1f6:	5e                   	pop    %esi
+  44b1f7:	d9 05 dc 36 4c 00    	flds   0x4c36dc
+  44b1fd:	c2 04 00             	ret    $0x4
+  44b200:	dd d8                	fstp   %st(0)
+  44b202:	5e                   	pop    %esi
+  44b203:	d9 05 e0 36 4c 00    	flds   0x4c36e0
+  44b209:	c2 04 00             	ret    $0x4
+  44b20c:	f7 86 04 04 00 00 00 	testl  $0x40000000,0x404(%esi)
+  44b213:	00 00 40 
+  44b216:	dd d8                	fstp   %st(0)
+  44b218:	be f8 2e 4c 00       	mov    $0x4c2ef8,%esi
+  44b21d:	75 05                	jne    0x44b224
+  44b21f:	be 00 2f 4c 00       	mov    $0x4c2f00,%esi
+  44b224:	e8 07 da 00 00       	call   0x458c30
+  44b229:	89 44 24 08          	mov    %eax,0x8(%esp)
+  44b22d:	db 44 24 08          	fildl  0x8(%esp)
+  44b231:	85 c0                	test   %eax,%eax
+  44b233:	7d 06                	jge    0x44b23b
+  44b235:	d8 05 98 7f 49 00    	fadds  0x497f98
+  44b23b:	5e                   	pop    %esi
+  44b23c:	c2 04 00             	ret    $0x4
+
+; float __fastcall AnmVm::getFloat(float float,AnmVm *This)
+; {
+;   int vm;
+;   int num;
+;   WORD *time;
+;   float10 extraout_ST0;
+;   float10 tempFloat;
+;   
+;   vm = FN_roundFloat(float);
+;   num = vm + -10000;
+;   tempFloat = extraout_ST0;
+;   switch(num) {
+;   case 0:
+;     return (float)This->intVars[0];
+;   case 1:
+;     return (float)This->intVars[1];
+;   case 2:
+;     return (float)This->intVars[2];
+;   case 3:
+;     return (float)This->intVars[3];
+;   case 4:
+;     return This->floatVars[0];
+;   case 5:
+;     return This->floatVars[1];
+;   case 6:
+;     return This->floatVars[2];
+;   case 7:
+;     return This->floatVars[3];
+;   case 8:
+;     return (float)This->intVar8;
+;   case 9:
+;     return (float)This->intVar9;
+;   case 10:
+;     time = &g_timeWord;
+;     if ((This->flagsLow & 0x40000000) == 0) {
+;       time = (WORD *)&g_splitTime;
+;     }
+;     tempFloat = FUN_004070a0(3.1415927,time,(float)num);
+;     return (float)tempFloat;
+;   case 0xb:
+;     tempFloat = FUN_00458da0();
+;     return (float)tempFloat;
+;   case 0xc:
+;     tempFloat = FUN_00458dd0();
+;     return (float)tempFloat;
+;   case 0xd:
+;     return (This->pos).x;
+;   case 0xe:
+;     return (This->pos).y;
+;   case 0xf:
+;     return (This->pos).z;
+;   case 0x10:
+;     return g_supervisor.stageCam.offset.x;
+;   case 0x11:
+;     return g_supervisor.stageCam.offset.y;
+;   case 0x12:
+;     return g_supervisor.stageCam.offset.z;
+;   case 0x13:
+;     return g_supervisor.stageCam.v3.x;
+;   case 0x14:
+;     return g_supervisor.stageCam.v3.y;
+;   case 0x15:
+;     return g_supervisor.stageCam.v3.z;
+;   case 0x16:
+;     time = &g_timeWord;
+;     if ((This->flagsLow & 0x40000000) == 0) {
+;       time = (WORD *)&g_splitTime;
+;     }
+;     FUN_00458c30_getNextInstrRelated(time);
+;     tempFloat = (float10)num;
+;     if (num < 0) {
+;       tempFloat = tempFloat + (float10)4.2949673e+09;
+;     }
+;   }
+;   return (float)tempFloat;
+; }
+
+;                      switchD_0044b52d::switchdataD_0044e228          XREF[1]:     FUN_0044b4f1:0044b52d(*)  
+; 0044e228 a9 b9 44 00     addr       switchD_0044b52d::caseD_ffff
+; 0044e22c 14 d8 44 00     addr       switchD_0044b52d::caseD_0
+; 0044e230 a9 b9 44 00     addr       switchD_0044b52d::caseD_ffff
+; 0044e234 b0 b9 44 00     addr       switchD_0044b52d::caseD_2
+; 0044e238 b5 bc 44 00     addr       switchD_0044b52d::caseD_3
+; 0044e23c 34 b5 44 00     addr       LAB_0044b534
+; 0044e240 51 b5 44 00     addr       switchD_0044b52d::caseD_5
+; 0044e244 88 cd 44 00     addr       LAB_0044cd88
+; 0044e248 c6 cd 44 00     addr       switchD_0044b52d::caseD_7
+; 0044e24c aa d1 44 00     addr       switchD_0044b52d::caseD_8
+; 0044e250 e4 d1 44 00     addr       switchD_0044b52d::caseD_9
+; 0044e254 2e d2 44 00     addr       switchD_0044b52d::caseD_a
+; 0044e258 68 d2 44 00     addr       switchD_0044b52d::caseD_b
+; 0044e25c b2 d2 44 00     addr       switchD_0044b52d::caseD_c
+; 0044e260 f1 d2 44 00     addr       switchD_0044b52d::caseD_d
+; 0044e264 3b d3 44 00     addr       switchD_0044b52d::caseD_e
+; 0044e268 7c d3 44 00     addr       switchD_0044b52d::caseD_f
+; 0044e26c c6 d3 44 00     addr       switchD_0044b52d::caseD_10
+; 0044e270 07 d4 44 00     addr       switchD_0044b52d::caseD_11
+; 0044e274 0e ce 44 00     addr       switchD_0044b52d::caseD_12
+; 0044e278 62 ce 44 00     addr       switchD_0044b52d::caseD_13
+; 0044e27c c6 ce 44 00     addr       switchD_0044b52d::caseD_14
+; 0044e280 21 cf 44 00     addr       switchD_0044b52d::caseD_15
+; 0044e284 85 cf 44 00     addr       switchD_0044b52d::caseD_16
+; 0044e288 d8 cf 44 00     addr       switchD_0044b52d::caseD_17
+; 0044e28c 3c d0 44 00     addr       switchD_0044b52d::caseD_18
+; 0044e290 9c d0 44 00     addr       switchD_0044b52d::caseD_19
+; 0044e294 00 d1 44 00     addr       switchD_0044b52d::caseD_1a
+; 0044e298 60 d1 44 00     addr       switchD_0044b52d::caseD_1b
+; 0044e29c ac b6 44 00     addr       switchD_0044b52d::caseD_1c
+; 0044e2a0 e0 b6 44 00     addr       switchD_0044b52d::caseD_1d
+; 0044e2a4 24 b7 44 00     addr       switchD_0044b52d::caseD_1e
+; 0044e2a8 58 b7 44 00     addr       switchD_0044b52d::caseD_1f
+; 0044e2ac a2 b7 44 00     addr       switchD_0044b52d::caseD_20
+; 0044e2b0 d6 b7 44 00     addr       switchD_0044b52d::caseD_21
+; 0044e2b4 20 b8 44 00     addr       switchD_0044b52d::caseD_22
+; 0044e2b8 54 b8 44 00     addr       switchD_0044b52d::caseD_23
+; 0044e2bc 9e b8 44 00     addr       switchD_0044b52d::caseD_24
+; 0044e2c0 d2 b8 44 00     addr       switchD_0044b52d::caseD_25
+; 0044e2c4 13 b9 44 00     addr       switchD_0044b52d::caseD_26
+; 0044e2c8 44 b9 44 00     addr       switchD_0044b52d::caseD_27
+; 0044e2cc 79 d4 44 00     addr       switchD_0044b52d::caseD_28
+; 0044e2d0 ff d4 44 00     addr       switchD_0044b52d::caseD_29
+; 0044e2d4 89 d5 44 00     addr       switchD_0044b52d::caseD_2a
+; 0044e2d8 dc d5 44 00     addr       switchD_0044b52d::caseD_2b
+; 0044e2dc 2f d6 44 00     addr       switchD_0044b52d::caseD_2c
+; 0044e2e0 82 d6 44 00     addr       switchD_0044b52d::caseD_2d
+; 0044e2e4 ad d6 44 00     addr       switchD_0044b52d::caseD_2e
+; 0044e2e8 0a d7 44 00     addr       switchD_0044b52d::caseD_2f
+; 0044e2ec 2c c1 44 00     addr       switchD_0044b52d::caseD_30
+; 0044e2f0 a6 bf 44 00     addr       switchD_0044b52d::caseD_31
+; 0044e2f4 fa bd 44 00     addr       switchD_0044b52d::caseD_32
+; 0044e2f8 50 be 44 00     addr       switchD_0044b52d::caseD_33
+; 0044e2fc 77 be 44 00     addr       switchD_0044b52d::caseD_34
+; 0044e300 1b c0 44 00     addr       switchD_0044b52d::caseD_35
+; 0044e304 90 c0 44 00     addr       switchD_0044b52d::caseD_36
+; 0044e308 df c0 44 00     addr       switchD_0044b52d::caseD_37
+; 0044e30c 2e c4 44 00     addr       switchD_0044b52d::caseD_38
+; 0044e310 3b c7 44 00     addr       switchD_0044b52d::caseD_39
+; 0044e314 e4 c7 44 00     addr       switchD_0044b52d::caseD_3a
+; 0044e318 29 c9 44 00     addr       switchD_0044b52d::caseD_3b
+; 0044e31c 40 ca 44 00     addr       switchD_0044b52d::caseD_3c
+; 0044e320 44 bf 44 00     addr       switchD_0044b52d::caseD_3d
+; 0044e324 75 bf 44 00     addr       switchD_0044b52d::caseD_3e
+; 0044e328 a3 b5 44 00     addr       switchD_0044b52d::caseD_3f
+; 0044e32c 14 d8 44 00     addr       switchD_0044b52d::caseD_0
+; 0044e330 17 c3 44 00     addr       switchD_0044b52d::caseD_41
+; 0044e334 18 c1 44 00     addr       switchD_0044b52d::caseD_42
+; 0044e338 af cb 44 00     addr       switchD_0044b52d::caseD_43
+; 0044e33c 90 d7 44 00     addr       switchD_0044b52d::caseD_44
+; 0044e340 9c b5 44 00     addr       switchD_0044b52d::caseD_45
+; 0044e344 5e c3 44 00     addr       switchD_0044b52d::caseD_46
+; 0044e348 91 c3 44 00     addr       switchD_0044b52d::caseD_47
+; 0044e34c f4 c2 44 00     addr       switchD_0044b52d::caseD_48
+; 0044e350 c4 c3 44 00     addr       switchD_0044b52d::caseD_49
+; 0044e354 ed c3 44 00     addr       switchD_0044b52d::caseD_4a
+; 0044e358 69 c2 44 00     addr       switchD_0044b52d::caseD_4b
+; 0044e35c f1 be 44 00     addr       switchD_0044b52d::caseD_4c
+; 0044e360 ca be 44 00     addr       switchD_0044b52d::caseD_4d
+; 0044e364 33 c8 44 00     addr       switchD_0044b52d::caseD_4e
+; 0044e368 dc c8 44 00     addr       switchD_0044b52d::caseD_4f
+; 0044e36c a8 d7 44 00     addr       switchD_0044b52d::caseD_50
+; 0044e370 6e b6 44 00     addr       switchD_0044b52d::caseD_51
+; 0044e374 d2 d7 44 00     addr       switchD_0044b52d::caseD_52
+; 0044e378 f9 cb 44 00     addr       switchD_0044b52d::caseD_53
+; 0044e37c 42 cc 44 00     addr       switchD_0044b52d::caseD_54
+; 0044e380 66 d7 44 00     addr       switchD_0044b52d::caseD_55
+; 0044e384 d2 b9 44 00     addr       switchD_0044b52d::caseD_56
+; 0044e388 fc d7 44 00     addr       switchD_0044b52d::caseD_57
+; 0044e38c f5 b9 44 00     addr       switchD_0044b52d::caseD_58
+; 0044e390 03 c4 44 00     addr       switchD_0044b52d::caseD_59
+; 0044e394 fe bb 44 00     addr       switchD_0044b52d::caseD_5a
+; 0044e398 9e bb 44 00     addr       switchD_0044b52d::caseD_5b
+; 0044e39c 25 bc 44 00     addr       switchD_0044b52d::caseD_5c
+; 0044e3a0 c5 ca 44 00     addr       switchD_0044b52d::caseD_5d
+; 0044e3a4 38 cb 44 00     addr       switchD_0044b52d::caseD_5e
+; 0044e3a8 1d bb 44 00     addr       switchD_0044b52d::caseD_5f
+; 0044e3ac 22 ba 44 00     addr       switchD_0044b52d::caseD_60
+; 0044e3b0 a5 ba 44 00     addr       switchD_0044b52d::caseD_61
+; 0044e3b4 f0 cc 44 00     addr       switchD_0044b52d::caseD_62
+; 0044e3b8 51 cd 44 00     addr       switchD_0044b52d::caseD_63
+; 0044e3bc 69 c5 44 00     addr       switchD_0044b52d::caseD_64
+; 0044e3c0 99 cc 44 00     addr       switchD_0044b52d::caseD_65
+; 0044e3c4 1e bd 44 00     addr       switchD_0044b52d::caseD_66
+
+void __fastcall AnmVm::run(AnmVm *This)
+{
+  uint16_t uVar1;
+  byte bVar2;
+  int opCode;
+  uint32_t *puVar3;
+  AnmLoaded *pAVar4;
+  uint uVar5;
+  undefined2 uVar14;
+  uint32_t uVar6;
+  uint32_t uVar7;
+  void *pvVar8;
+  int *puVar10;
+  int *puVar9;
+  uint32_t *puVar11;
+  undefined2 extraout_var;
+  InterpInt3 *This_00;
+  float *pfVar12;
+  uint uVar13;
+  AnmRawInstruction *nextInstruction;
+  AnmRawInstruction *extraout_ECX;
+  AnmRawInstruction *extraout_ECX_00;
+  AnmRawInstruction *extraout_ECX_01;
+  undefined4 extraout_ECX_02;
+  undefined4 extraout_ECX_03;
+  undefined4 extraout_ECX_04;
+  undefined4 extraout_ECX_05;
+  undefined4 extraout_ECX_06;
+  undefined4 extraout_ECX_07;
+  undefined4 extraout_ECX_08;
+  undefined4 uVar15;
+  AnmRawInstruction *extraout_ECX_09;
+  AnmRawInstruction *extraout_ECX_10;
+  AnmRawInstruction *extraout_ECX_11;
+  AnmRawInstruction *extraout_ECX_12;
+  AnmRawInstruction *extraout_ECX_13;
+  AnmRawInstruction *extraout_ECX_14;
+  AnmRawInstruction *extraout_ECX_15;
+  AnmRawInstruction *extraout_ECX_16;
+  AnmRawInstruction *extraout_ECX_17;
+  AnmRawInstruction *extraout_ECX_18;
+  AnmRawInstruction *extraout_ECX_19;
+  AnmRawInstruction *in_EDX;
+  AnmRawInstruction *extraout_EDX;
+  AnmRawInstruction *extraout_EDX_00;
+  AnmRawInstruction *extraout_EDX_01;
+  AnmRawInstruction *pAVar16;
+  AnmRawInstruction *extraout_EDX_02;
+  AnmRawInstruction *extraout_EDX_03;
+  AnmRawInstruction *extraout_EDX_04;
+  AnmRawInstruction *extraout_EDX_05;
+  AnmRawInstruction *extraout_EDX_06;
+  AnmRawInstruction *extraout_EDX_07;
+  AnmRawInstruction *extraout_EDX_08;
+  AnmRawInstruction *extraout_EDX_09;
+  AnmRawInstruction *extraout_EDX_10;
+  AnmRawInstruction *extraout_EDX_11;
+  AnmRawInstruction *extraout_EDX_12;
+  AnmRawInstruction *extraout_EDX_13;
+  AnmRawInstruction *extraout_EDX_14;
+  AnmRawInstruction *extraout_EDX_15;
+  AnmRawInstruction *extraout_EDX_16;
+  AnmRawInstruction *extraout_EDX_17;
+  AnmRawInstruction *extraout_EDX_18;
+  AnmRawInstruction *extraout_EDX_19;
+  AnmRawInstruction *extraout_EDX_20;
+  AnmRawInstruction *extraout_EDX_21;
+  AnmRawInstruction *extraout_EDX_22;
+  AnmRawInstruction *extraout_EDX_23;
+  AnmRawInstruction *extraout_EDX_24;
+  AnmRawInstruction *extraout_EDX_25;
+  AnmRawInstruction *extraout_EDX_26;
+  AnmRawInstruction *extraout_EDX_27;
+  AnmRawInstruction *extraout_EDX_28;
+  AnmRawInstruction *extraout_EDX_29;
+  AnmRawInstruction *extraout_EDX_30;
+  AnmRawInstruction *extraout_EDX_31;
+  AnmRawInstruction *extraout_EDX_32;
+  AnmRawInstruction *extraout_EDX_33;
+  AnmRawInstruction *extraout_EDX_34;
+  AnmRawInstruction *extraout_EDX_35;
+  AnmRawInstruction *extraout_EDX_36;
+  AnmRawInstruction *extraout_EDX_37;
+  AnmRawInstruction *extraout_EDX_38;
+  AnmRawInstruction *extraout_EDX_39;
+  AnmRawInstruction *extraout_EDX_40;
+  AnmRawInstruction *extraout_EDX_41;
+  AnmRawInstruction *extraout_EDX_42;
+  AnmRawInstruction *extraout_EDX_43;
+  AnmRawInstruction *extraout_EDX_44;
+  AnmRawInstruction *extraout_EDX_45;
+  AnmRawInstruction *extraout_EDX_46;
+  AnmRawInstruction *extraout_EDX_47;
+  AnmRawInstruction *extraout_EDX_48;
+  AnmRawInstruction *extraout_EDX_49;
+  AnmRawInstruction *extraout_EDX_50;
+  AnmRawInstruction *extraout_EDX_51;
+  AnmRawInstruction *extraout_EDX_52;
+  AnmRawInstruction *extraout_EDX_53;
+  AnmRawInstruction *extraout_EDX_54;
+  AnmRawInstruction *extraout_EDX_55;
+  AnmRawInstruction *extraout_EDX_56;
+  AnmRawInstruction *extraout_EDX_57;
+  AnmRawInstruction *extraout_EDX_58;
+  AnmRawInstruction *extraout_EDX_59;
+  AnmRawInstruction *extraout_EDX_60;
+  AnmRawInstruction *extraout_EDX_61;
+  AnmRawInstruction *extraout_EDX_62;
+  AnmRawInstruction *extraout_EDX_63;
+  AnmRawInstruction *extraout_EDX_64;
+  AnmRawInstruction *extraout_EDX_65;
+  AnmRawInstruction *extraout_EDX_66;
+  AnmRawInstruction *extraout_EDX_67;
+  AnmRawInstruction *extraout_EDX_68;
+  AnmRawInstruction *extraout_EDX_69;
+  AnmRawInstruction *extraout_EDX_70;
+  AnmRawInstruction *extraout_EDX_71;
+  AnmRawInstruction *extraout_EDX_72;
+  AnmRawInstruction *extraout_EDX_73;
+  AnmRawInstruction *extraout_EDX_74;
+  AnmRawInstruction *extraout_EDX_75;
+  AnmRawInstruction *extraout_EDX_76;
+  AnmRawInstruction *extraout_EDX_77;
+  AnmRawInstruction *extraout_EDX_78;
+  AnmRawInstruction *extraout_EDX_79;
+  AnmRawInstruction *extraout_EDX_80;
+  AnmRawInstruction *extraout_EDX_81;
+  AnmRawInstruction *extraout_EDX_82;
+  AnmRawInstruction *extraout_EDX_83;
+  AnmRawInstruction *extraout_EDX_84;
+  AnmRawInstruction *extraout_EDX_85;
+  AnmRawInstruction *extraout_EDX_86;
+  AnmRawInstruction *extraout_EDX_87;
+  AnmRawInstruction *extraout_EDX_88;
+  AnmRawInstruction *extraout_EDX_89;
+  AnmRawInstruction *extraout_EDX_90;
+  AnmRawInstruction *extraout_EDX_91;
+  AnmRawInstruction *extraout_EDX_92;
+  AnmRawInstruction *extraout_EDX_93;
+  AnmRawInstruction *extraout_EDX_94;
+  AnmRawInstruction *extraout_EDX_95;
+  AnmRawInstruction *extraout_EDX_96;
+  AnmRawInstruction *extraout_EDX_97;
+  AnmRawInstruction *extraout_EDX_98;
+  AnmRawInstruction *extraout_EDX_99;
+  AnmRawInstruction *extraout_EDX_x00100;
+  AnmRawInstruction *extraout_EDX_x00101;
+  AnmRawInstruction *extraout_EDX_x00102;
+  AnmRawInstruction *extraout_EDX_x00103;
+  AnmRawInstruction *extraout_EDX_x00104;
+  AnmRawInstruction *extraout_EDX_x00105;
+  AnmRawInstruction *extraout_EDX_x00106;
+  AnmRawInstruction *extraout_EDX_x00107;
+  AnmRawInstruction *extraout_EDX_x00108;
+  AnmRawInstruction *extraout_EDX_x00109;
+  AnmRawInstruction *extraout_EDX_x00110;
+  AnmRawInstruction *extraout_EDX_x00111;
+  AnmRawInstruction *extraout_EDX_x00112;
+  AnmRawInstruction *extraout_EDX_x00113;
+  AnmRawInstruction *extraout_EDX_x00114;
+  AnmRawInstruction *extraout_EDX_x00115;
+  AnmRawInstruction *extraout_EDX_x00116;
+  AnmRawInstruction *extraout_EDX_x00117;
+  AnmRawInstruction *extraout_EDX_x00118;
+  AnmRawInstruction *extraout_EDX_x00119;
+  AnmRawInstruction *extraout_EDX_x00120;
+  float *pfVar17;
+  int unaff_ESI;
+  AnmRawInstruction *pAVar18;
+  undefined4 unaff_EDI;
+  float *pfVar19;
+  bool bVar20;
+  float10 fVar21;
+  float fVar22;
+  float fVar23;
+  float fVar24;
+  AnmRawInstruction *local_d0;
+  uint local_cc;
+  float local_c8;
+  float local_c4;
+  float local_c0;
+  float local_bc;
+  float local_b8;
+  float local_b4;
+  float local_b0;
+  float local_ac;
+  float local_a8;
+  float local_a4;
+  float local_a0;
+  AnmRawInstruction *local_9c;
+  float local_98;
+  float local_94;
+  float local_90;
+  float local_8c;
+  float local_88;
+  byte local_84;
+  undefined1 local_83;
+  undefined1 local_82;
+  byte local_80;
+  undefined1 local_7f;
+  undefined1 local_7e;
+  byte local_7c;
+  undefined1 local_7b;
+  undefined1 local_7a;
+  float local_78;
+  float local_74;
+  float local_70;
+  float gameSpeed;
+  float local_68;
+  float local_64;
+  float local_60;
+  int local_5c;
+  float local_58;
+  float local_54;
+  int local_50;
+  float local_4c;
+  int local_48;
+  float local_44;
+  AnmRawInstruction *local_40;
+  float local_3c;
+  float local_38;
+  float local_34;
+  float local_2c;
+  float local_28;
+  float local_20;
+  float local_1c;
+  float local_14;
+  float local_10;
+  AnmRawInstruction *currentInstruction;
+  OpCodeStruct *AnmRawInstr;
+  int someInt;
+  AnmRawInstruction *currentInstr;
+  ushort pendingInterrupt;
+  
+  if (This->currentInstruction == (AnmRawInstruction *)0x0) {
+    return;
+  }
+  if ((This->flagsLow & 0x20000) == 0) {
+    gameSpeed = g_gameSpeed;
+    if ((This->flagsLow & 0x20000000) != 0) {
+      g_gameSpeed = 1.0;
+    }
+    pendingInterrupt = This->pendingInterrupt;
+    nextInstruction = (AnmRawInstruction *)(uint)pendingInterrupt;
+    if (pendingInterrupt != 0) goto Interrupt;
+LoopAgain:
+    pAVar18 = This->currentInstruction;
+    opCode = (int)pAVar18->time;
+    if (opCode <= (This->timeInScript).current) {
+      opCode = (short)pAVar18->opcode + 1;
+      switch(opCode) {
+      case 0:
+      case 2:
+        This->flagsLow = This->flagsLow & 0xfffffffe;
+      case 3:
+        This->currentInstruction = (AnmRawInstruction *)0x0;
+        g_gameSpeed = gameSpeed;
+        return;
+      case 4:
+        This->flagsLow = This->flagsLow | 1;
+        if (This->spriteMappingFunc == (spriteMappingFunction *)0x0) {
+          someInt = pAVar18->args[0];
+          if ((pAVar18->varMask & 1) != 0) {
+            someInt = getNextInstruction(This,someInt);
+          }
+        }
+        else {
+          pvVar8 = (void *)pAVar18->args[0];
+          if ((pAVar18->varMask & 1) != 0) {
+            pvVar8 = (void *)getNextInstruction(This,(int)pvVar8);
+          }
+          someInt = (*This->spriteMappingFunc)(This,pvVar8);
+        }
+        setupTextureQuadAndMatrices(This,someInt,This->anmLoaded);
+        This->timeOfLastSpriteSet = (This->timeInScript).current;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_28;
+        goto LoopAgain;
+      case 5:
+        Timer::setCurrent(pAVar18->args[1],&This->timeInScript);
+        in_EDX = (AnmRawInstruction *)((int)This->beginningOfScript->args + (pAVar18->args[0] - 8));
+        This->currentInstruction = in_EDX;
+        nextInstruction = extraout_ECX;
+        goto LoopAgain;
+      case 6:
+        puVar11 = pAVar18->args;
+        puVar3 = puVar11;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar3 = (uint32_t *)getIntVar(This,(int *)puVar11);
+          in_EDX = extraout_EDX;
+        }
+        *puVar3 = *puVar3 - 1;
+        uVar7 = *puVar11;
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_00;
+        }
+        if (0 < (int)uVar7) {
+          Timer::setCurrent(pAVar18->args[2],&This->timeInScript);
+          nextInstruction =
+               (AnmRawInstruction *)((int)This->beginningOfScript->args + (pAVar18->args[1] - 8));
+          This->currentInstruction = nextInstruction;
+          in_EDX = extraout_EDX_01;
+          goto LoopAgain;
+        }
+        break;
+      case 7:
+        if ((pAVar18->varMask & 2) == 0) {
+          pAVar16 = (AnmRawInstruction *)pAVar18->args[1];
+        }
+        else {
+          pAVar16 = (AnmRawInstruction *)getNextInstruction(This,pAVar18->args[1]);
+          in_EDX = extraout_EDX_69;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) == 0) goto LAB_0044d4ec;
+        pfVar12 = (float *)getIntVar(This,(int *)puVar11);
+        *pfVar12 = (float)pAVar16;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_70;
+        goto LoopAgain;
+      case 8:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_71;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_72;
+        }
+        *puVar11 = (uint32_t)fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 9:
+        if ((pAVar18->varMask & 2) == 0) {
+          uVar7 = pAVar18->args[1];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[1]);
+          in_EDX = extraout_EDX_94;
+        }
+        puVar10 = (int *)pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar10 = getIntVar(This,puVar10);
+          in_EDX = extraout_EDX_95;
+        }
+        *puVar10 = *puVar10 + uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 10:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_96;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_97;
+        }
+        *puVar11 = (uint32_t)(fVar22 + (float)*puVar11);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0xb:
+        if ((pAVar18->varMask & 2) == 0) {
+          uVar7 = pAVar18->args[1];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[1]);
+          in_EDX = extraout_EDX_98;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+          in_EDX = extraout_EDX_99;
+        }
+        *puVar11 = *puVar11 - uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0xc:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_x00100;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_x00101;
+        }
+        *puVar11 = (uint32_t)((float)*puVar11 - fVar22);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0xd:
+        if ((pAVar18->varMask & 2) == 0) {
+          uVar7 = pAVar18->args[1];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[1]);
+          in_EDX = extraout_EDX_x00102;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+          in_EDX = extraout_EDX_x00103;
+        }
+        *puVar11 = *puVar11 * uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0xe:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_x00104;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_x00105;
+        }
+        *puVar11 = (uint32_t)((float)*puVar11 * fVar22);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0xf:
+        if ((pAVar18->varMask & 2) == 0) {
+          uVar7 = pAVar18->args[1];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[1]);
+        }
+        puVar9 = (int *)pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar9 = getIntVar(This,puVar9);
+        }
+        in_EDX = (AnmRawInstruction *)(*puVar9 % (int)uVar7);
+        *puVar9 = *puVar9 / (int)uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x10:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_x00106;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_x00107;
+        }
+        *puVar11 = (uint32_t)((float)*puVar11 / fVar22);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x11:
+        if ((pAVar18->varMask & 2) == 0) {
+          uVar7 = pAVar18->args[1];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[1]);
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+        }
+        in_EDX = (AnmRawInstruction *)((int)*puVar11 % (int)uVar7);
+        *puVar11 = (uint32_t)in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x12:
+        if ((pAVar18->varMask & 2) != 0) {
+          getFloat(pAVar18->args[1],This);
+          nextInstruction = extraout_ECX_12;
+        }
+        if ((pAVar18->varMask & 1) != 0) {
+          getFloat(pAVar18->args[0],This);
+          nextInstruction = extraout_ECX_13;
+        }
+        fVar21 = (float10)FUN_004866ca(nextInstruction);
+        local_d0 = (AnmRawInstruction *)(float)fVar21;
+        if ((pAVar18->varMask & 1) != 0) goto LAB_0044d6e5;
+        pAVar18->args[0] = (uint32_t)local_d0;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_x00108;
+        goto LoopAgain;
+      case 0x13:
+        uVar7 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_73;
+        }
+        if ((pAVar18->varMask & 4) == 0) {
+          uVar6 = pAVar18->args[2];
+        }
+        else {
+          uVar6 = getNextInstruction(This,pAVar18->args[2]);
+          in_EDX = extraout_EDX_74;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+          in_EDX = extraout_EDX_75;
+        }
+        *puVar11 = uVar6 + uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x14:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_76;
+        }
+        fVar23 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_77;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_78;
+        }
+        *puVar11 = (uint32_t)(fVar23 + fVar22);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x15:
+        if ((pAVar18->varMask & 2) == 0) {
+          uVar7 = pAVar18->args[1];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[1]);
+        }
+        if ((pAVar18->varMask & 4) == 0) {
+          in_EDX = (AnmRawInstruction *)pAVar18->args[2];
+          local_d0 = in_EDX;
+        }
+        else {
+          local_d0 = (AnmRawInstruction *)getNextInstruction(This,pAVar18->args[2]);
+          in_EDX = extraout_EDX_79;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+          in_EDX = extraout_EDX_80;
+        }
+        *puVar11 = uVar7 - (int)local_d0;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x16:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_81;
+        }
+        fVar23 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_82;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_83;
+        }
+        *puVar11 = (uint32_t)(fVar22 - fVar23);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x17:
+        uVar7 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_84;
+        }
+        if ((pAVar18->varMask & 4) == 0) {
+          uVar6 = pAVar18->args[2];
+        }
+        else {
+          uVar6 = getNextInstruction(This,pAVar18->args[2]);
+          in_EDX = extraout_EDX_85;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+          in_EDX = extraout_EDX_86;
+        }
+        *puVar11 = uVar6 * uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x18:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_87;
+        }
+        fVar23 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_88;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_89;
+        }
+        *puVar11 = (uint32_t)(fVar23 * fVar22);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x19:
+        if ((pAVar18->varMask & 2) == 0) {
+          local_d0 = (AnmRawInstruction *)pAVar18->args[1];
+        }
+        else {
+          local_d0 = (AnmRawInstruction *)getNextInstruction(This,pAVar18->args[1]);
+        }
+        if ((pAVar18->varMask & 4) == 0) {
+          uVar7 = pAVar18->args[2];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[2]);
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+        }
+        in_EDX = (AnmRawInstruction *)((int)local_d0 % (int)uVar7);
+        *puVar11 = (int)local_d0 / (int)uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x1a:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_90;
+        }
+        fVar23 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_91;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_92;
+        }
+        *puVar11 = (uint32_t)(fVar22 / fVar23);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x1b:
+        if ((pAVar18->varMask & 2) == 0) {
+          local_d0 = (AnmRawInstruction *)pAVar18->args[1];
+        }
+        else {
+          local_d0 = (AnmRawInstruction *)getNextInstruction(This,pAVar18->args[1]);
+        }
+        if ((pAVar18->varMask & 4) == 0) {
+          uVar7 = pAVar18->args[2];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[2]);
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+        }
+        in_EDX = (AnmRawInstruction *)((int)local_d0 % (int)uVar7);
+        *puVar11 = (uint32_t)in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x1c:
+        if ((pAVar18->varMask & 4) != 0) {
+          getFloat(pAVar18->args[2],This);
+          nextInstruction = extraout_ECX_10;
+        }
+        if ((pAVar18->varMask & 2) != 0) {
+          getFloat(pAVar18->args[1],This);
+          nextInstruction = extraout_ECX_11;
+        }
+        fVar21 = (float10)FUN_004866ca(nextInstruction);
+        local_d0 = (AnmRawInstruction *)(float)fVar21;
+        in_EDX = extraout_EDX_93;
+        goto LAB_0044d6d6;
+      case 0x1d:
+        if ((pAVar18->varMask & 1) == 0) {
+          uVar7 = pAVar18->args[0];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[0]);
+          in_EDX = extraout_EDX_03;
+        }
+        uVar6 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+          in_EDX = extraout_EDX_04;
+        }
+        if (uVar7 != uVar6) break;
+        goto LAB_0044b989;
+      case 0x1e:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_05;
+        }
+        fVar23 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_06;
+        }
+        bVar20 = (NAN(fVar23) || NAN(fVar22)) == (fVar23 == fVar22);
+        goto LAB_0044b983;
+      case 0x1f:
+        if ((pAVar18->varMask & 1) == 0) {
+          uVar7 = pAVar18->args[0];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[0]);
+          in_EDX = extraout_EDX_07;
+        }
+        uVar6 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+          in_EDX = extraout_EDX_08;
+        }
+        if (uVar7 != uVar6) goto LAB_0044b989;
+        break;
+      case 0x20:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_09;
+        }
+        fVar23 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_10;
+        }
+        if ((NAN(fVar23) || NAN(fVar22)) == (fVar23 == fVar22)) goto LAB_0044b989;
+        break;
+      case 0x21:
+        if ((pAVar18->varMask & 1) == 0) {
+          uVar7 = pAVar18->args[0];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[0]);
+          in_EDX = extraout_EDX_11;
+        }
+        uVar6 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+          in_EDX = extraout_EDX_12;
+        }
+        if ((int)uVar7 < (int)uVar6) goto LAB_0044b989;
+        break;
+      case 0x22:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_13;
+        }
+        fVar23 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_14;
+        }
+        if (fVar22 < fVar23) goto LAB_0044b989;
+        break;
+      case 0x23:
+        if ((pAVar18->varMask & 1) == 0) {
+          uVar7 = pAVar18->args[0];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[0]);
+          in_EDX = extraout_EDX_15;
+        }
+        uVar6 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+          in_EDX = extraout_EDX_16;
+        }
+        if ((int)uVar7 <= (int)uVar6) goto LAB_0044b989;
+        break;
+      case 0x24:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_17;
+        }
+        fVar23 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_18;
+        }
+        if (fVar22 <= fVar23) goto LAB_0044b989;
+        break;
+      case 0x25:
+        if ((pAVar18->varMask & 1) == 0) {
+          uVar7 = pAVar18->args[0];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[0]);
+          in_EDX = extraout_EDX_19;
+        }
+        uVar6 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+          in_EDX = extraout_EDX_20;
+        }
+        if ((int)uVar6 < (int)uVar7) goto LAB_0044b989;
+        break;
+      case 0x26:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_21;
+        }
+        fVar23 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_22;
+        }
+        bVar20 = fVar23 < fVar22 == (NAN(fVar23) || NAN(fVar22));
+        goto LAB_0044b983;
+      case 0x27:
+        if ((pAVar18->varMask & 1) == 0) {
+          uVar7 = pAVar18->args[0];
+        }
+        else {
+          uVar7 = getNextInstruction(This,pAVar18->args[0]);
+          in_EDX = extraout_EDX_23;
+        }
+        uVar6 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+          in_EDX = extraout_EDX_24;
+        }
+        if ((int)uVar6 <= (int)uVar7) goto LAB_0044b989;
+        break;
+      case 0x28:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_25;
+        }
+        fVar23 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar23 = getFloat(fVar23,This);
+          in_EDX = extraout_EDX_26;
+        }
+        bVar20 = fVar23 < fVar22 == (fVar23 == fVar22);
+LAB_0044b983:
+        if (!bVar20) {
+LAB_0044b989:
+          Timer::setCurrent(pAVar18->args[3],&This->timeInScript);
+          in_EDX = (AnmRawInstruction *)
+                   ((int)This->beginningOfScript->args + (pAVar18->args[2] - 8));
+          This->currentInstruction = in_EDX;
+          nextInstruction = extraout_ECX_01;
+          goto LoopAgain;
+        }
+        break;
+      case 0x29:
+        uVar5 = pAVar18->args[1];
+        if ((This->flagsLow & 0x40000000) == 0) {
+          if ((pAVar18->varMask & 2) != 0) {
+            uVar5 = getNextInstruction(This,uVar5);
+            in_EDX = extraout_EDX_x00110;
+          }
+          if (uVar5 == 0) goto LAB_0044d4da;
+          uVar13 = uVar5;
+          FUN_00458c30(g_splitTime.shorts);
+          in_EDX = (AnmRawInstruction *)(uVar13 % uVar5);
+          pAVar16 = in_EDX;
+        }
+        else {
+          if ((pAVar18->varMask & 2) != 0) {
+            uVar5 = getNextInstruction(This,uVar5);
+            in_EDX = extraout_EDX_x00109;
+          }
+          if (uVar5 == 0) {
+LAB_0044d4da:
+            pAVar16 = (AnmRawInstruction *)0x0;
+          }
+          else {
+            uVar13 = uVar5;
+            FUN_00458c30(&g_timeWord);
+            in_EDX = (AnmRawInstruction *)(uVar13 % uVar5);
+            pAVar16 = in_EDX;
+          }
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getIntVar(This,(int *)puVar11);
+          in_EDX = extraout_EDX_x00111;
+        }
+LAB_0044d4ec:
+        *puVar11 = (uint32_t)pAVar16;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x2a:
+        fVar22 = (float)pAVar18->args[1];
+        if ((This->flagsLow & 0x40000000) == 0) {
+          if ((pAVar18->varMask & 2) != 0) {
+            fVar22 = getFloat(fVar22,This);
+          }
+        }
+        else if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar21 = FUN_0040b9f0(fVar22);
+        puVar11 = pAVar18->args;
+        in_EDX = extraout_EDX_x00112;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          in_EDX = extraout_EDX_x00113;
+        }
+        *puVar11 = (uint32_t)(float)fVar21;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x2b:
+        if ((pAVar18->varMask & 2) != 0) {
+          getFloat(pAVar18->args[1],This);
+          nextInstruction = extraout_ECX_14;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          nextInstruction = extraout_ECX_15;
+        }
+        fVar21 = FUN_00405fb0(nextInstruction);
+        *puVar11 = (uint32_t)(float)fVar21;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_x00114;
+        goto LoopAgain;
+      case 0x2c:
+        if ((pAVar18->varMask & 2) != 0) {
+          getFloat(pAVar18->args[1],This);
+          nextInstruction = extraout_ECX_16;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          nextInstruction = extraout_ECX_17;
+        }
+        fVar21 = FUN_00419660(nextInstruction);
+        *puVar11 = (uint32_t)(float)fVar21;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_x00115;
+        goto LoopAgain;
+      case 0x2d:
+        if ((pAVar18->varMask & 2) != 0) {
+          getFloat(pAVar18->args[1],This);
+          nextInstruction = extraout_ECX_18;
+        }
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+          nextInstruction = extraout_ECX_19;
+        }
+        fVar21 = FUN_0042b6d0(nextInstruction);
+        *puVar11 = (uint32_t)(float)fVar21;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_x00116;
+        goto LoopAgain;
+      case 0x2e:
+        if ((pAVar18->varMask & 2) != 0) {
+          getFloat(pAVar18->args[1],This);
+        }
+        fVar21 = (float10)FUN_00486740();
+        local_d0 = (AnmRawInstruction *)(float)fVar21;
+        in_EDX = extraout_EDX_x00117;
+        goto LAB_0044d6d6;
+      case 0x2f:
+        if ((pAVar18->varMask & 2) != 0) {
+          getFloat(pAVar18->args[1],This);
+        }
+        fVar21 = (float10)FUN_00486890();
+        local_d0 = (AnmRawInstruction *)(float)fVar21;
+        in_EDX = extraout_EDX_x00118;
+LAB_0044d6d6:
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+LAB_0044d6e5:
+          puVar11 = (uint32_t *)getFloat2(This,pAVar18->args);
+          in_EDX = extraout_EDX_x00119;
+        }
+        *puVar11 = (uint32_t)local_d0;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x30:
+        fVar22 = (float)pAVar18->args[0];
+        puVar11 = pAVar18->args;
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        if ((pAVar18->varMask & 1) != 0) {
+          puVar11 = (uint32_t *)getFloat2(This,puVar11);
+        }
+        fVar21 = FUN_00458e30(fVar22,0.0);
+        *puVar11 = (uint32_t)(float)fVar21;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_x00120;
+        goto LoopAgain;
+      case 0x31:
+        fVar22 = (float)pAVar18->args[2];
+        if ((This->flagsLow & 0x100) == 0) {
+          if ((pAVar18->varMask & 4) != 0) {
+            fVar22 = getFloat(fVar22,This);
+          }
+          in_EDX = (AnmRawInstruction *)pAVar18->args[1];
+          if ((pAVar18->varMask & 2) != 0) {
+            in_EDX = (AnmRawInstruction *)getFloat(in_EDX,This);
+          }
+          fVar23 = (float)pAVar18->args[0];
+          if ((pAVar18->varMask & 1) != 0) {
+            fVar23 = getFloat(fVar23,This);
+          }
+          (This->pos).x = fVar23;
+          (This->pos).y = (float)in_EDX;
+          (This->pos).z = fVar22;
+          nextInstruction =
+               (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+          This->currentInstruction = nextInstruction;
+          local_44 = fVar23;
+          local_40 = in_EDX;
+          local_3c = fVar22;
+        }
+        else {
+          if ((pAVar18->varMask & 4) != 0) {
+            fVar22 = getFloat(fVar22,This);
+          }
+          in_EDX = (AnmRawInstruction *)pAVar18->args[1];
+          if ((pAVar18->varMask & 2) != 0) {
+            in_EDX = (AnmRawInstruction *)getFloat(in_EDX,This);
+          }
+          fVar23 = (float)pAVar18->args[0];
+          if ((pAVar18->varMask & 1) != 0) {
+            fVar23 = getFloat(fVar23,This);
+          }
+          (This->pos2).x = fVar23;
+          (This->pos2).y = (float)in_EDX;
+          (This->pos2).z = fVar22;
+          nextInstruction =
+               (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+          This->currentInstruction = nextInstruction;
+          local_a0 = fVar23;
+          local_9c = in_EDX;
+          local_98 = fVar22;
+        }
+        goto LoopAgain;
+      case 0x32:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_40;
+        }
+        (This->rotation).x = fVar22;
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_41;
+        }
+        (This->rotation).y = fVar22;
+        fVar22 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_42;
+        }
+        This->flagsLow = This->flagsLow | 4;
+        (This->rotation).z = fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x33:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_30;
+        }
+        (This->scale).x = fVar22;
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_31;
+        }
+        This->flagsLow = This->flagsLow | 8;
+        (This->scale).y = fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x34:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_32;
+        }
+        *(char *)((int)&This->color1 + 3) = (char)uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x35:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_33;
+        }
+        *(char *)((int)&This->color1 + 2) = (char)uVar7;
+        uVar7 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_34;
+        }
+        *(char *)((int)&This->color1 + 1) = (char)uVar7;
+        uVar7 = pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_35;
+        }
+        *(char *)&This->color1 = (char)uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x36:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_43;
+        }
+        (This->angularVelocity).x = fVar22;
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_44;
+        }
+        (This->angularVelocity).y = fVar22;
+        fVar22 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_45;
+        }
+        This->flagsLow = This->flagsLow | 4;
+        (This->angularVelocity).z = fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x37:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_46;
+        }
+        (This->scaleGrowth).x = fVar22;
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_47;
+        }
+        (This->scaleGrowth).y = fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x38:
+        pvVar8 = (void *)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          pvVar8 = (void *)getNextInstruction(This,(int)pvVar8);
+        }
+        FUN_0044f400(pvVar8,0,*(byte *)((int)&This->color1 + 3),(byte)pAVar18->args[0]);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_48;
+        goto LoopAgain;
+      case 0x39:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        uVar5 = This->flagsLow;
+        (This->posInterp).endTime = uVar7;
+        (This->posInterp).bezier1.x = _DAT_004c326c;
+        (This->posInterp).bezier1.y = _DAT_004c3270;
+        (This->posInterp).bezier1.z = _DAT_004c3274;
+        (This->posInterp).bezier2.x = _DAT_004c326c;
+        (This->posInterp).bezier2.y = _DAT_004c3270;
+        (This->posInterp).bezier2.z = _DAT_004c3274;
+        (This->posInterp).method = pAVar18->args[1];
+        if ((uVar5 & 0x100) == 0) {
+          fVar22 = (This->pos).x;
+          fVar23 = (This->pos).y;
+          fVar24 = (This->pos).z;
+        }
+        else {
+          fVar22 = (This->pos2).x;
+          fVar23 = (This->pos2).y;
+          fVar24 = (This->pos2).z;
+        }
+        (This->posInterp).initial.x = fVar22;
+        (This->posInterp).initial.y = fVar23;
+        (This->posInterp).initial.z = fVar24;
+        fVar22 = (float)pAVar18->args[4];
+        if ((pAVar18->varMask & 0x10) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar23 = (float)pAVar18->args[3];
+        if ((pAVar18->varMask & 8) != 0) {
+          fVar23 = getFloat(fVar23,This);
+        }
+        fVar24 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar24 = getFloat(fVar24,This);
+        }
+        (This->posInterp).goal.x = fVar24;
+        (This->posInterp).goal.y = fVar23;
+        (This->posInterp).goal.z = fVar22;
+        local_90 = fVar24;
+        local_8c = fVar23;
+        local_88 = fVar22;
+        FUN_00405c60();
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_53;
+        goto LoopAgain;
+      case 0x3a:
+        local_7c = (byte)This->color1;
+        local_7b = *(undefined1 *)((int)&This->color1 + 1);
+        local_7a = *(undefined1 *)((int)&This->color1 + 2);
+        uVar7 = pAVar18->args[4];
+        if ((pAVar18->varMask & 0x10) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        if ((pAVar18->varMask & 8) == 0) {
+          local_cc._0_1_ = (undefined1)pAVar18->args[3];
+        }
+        else {
+          opCode = getNextInstruction(This,pAVar18->args[3]);
+          local_cc._0_1_ = (undefined1)opCode;
+        }
+        uVar6 = pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+        }
+        local_d0._0_1_ = (byte)uVar7;
+        local_82 = (undefined1)uVar6;
+        uVar7 = pAVar18->args[0];
+        local_84 = (byte)local_d0;
+        local_83 = (undefined1)local_cc;
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        FUN_0044f270(&local_84,&local_7c,uVar7,(byte)pAVar18->args[1]);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_55;
+        goto LoopAgain;
+      case 0x3b:
+        if ((pAVar18->varMask & 4) == 0) {
+          bVar2 = (byte)pAVar18->args[2];
+        }
+        else {
+          opCode = getNextInstruction(This,pAVar18->args[2]);
+          bVar2 = (byte)opCode;
+        }
+        pvVar8 = (void *)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          pvVar8 = (void *)getNextInstruction(This,(int)pvVar8);
+        }
+        FUN_0044f400(pvVar8,(byte)pAVar18->args[1],*(byte *)((int)&This->color1 + 3),bVar2);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_56;
+        goto LoopAgain;
+      case 0x3c:
+        fVar22 = (float)pAVar18->args[4];
+        if ((pAVar18->varMask & 0x10) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar23 = (float)pAVar18->args[3];
+        if ((pAVar18->varMask & 8) != 0) {
+          fVar23 = getFloat(fVar23,This);
+        }
+        fVar24 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar24 = getFloat(fVar24,This);
+        }
+        uVar7 = pAVar18->args[0];
+        local_bc = fVar24;
+        local_b8 = fVar23;
+        local_b4 = fVar22;
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        (This->rotationInterp).endTime = uVar7;
+        (This->rotationInterp).bezier1.x = _DAT_004c326c;
+        (This->rotationInterp).bezier1.y = _DAT_004c3270;
+        (This->rotationInterp).bezier1.z = _DAT_004c3274;
+        (This->rotationInterp).bezier2.x = _DAT_004c326c;
+        (This->rotationInterp).bezier2.y = _DAT_004c3270;
+        (This->rotationInterp).bezier2.z = _DAT_004c3274;
+        fVar22 = (This->rotation).x;
+        (This->rotationInterp).method = pAVar18->args[1];
+        fVar23 = (This->rotation).y;
+        (This->rotationInterp).initial.x = fVar22;
+        fVar22 = (This->rotation).z;
+        (This->rotationInterp).initial.y = fVar23;
+        (This->rotationInterp).goal.x = local_bc;
+        (This->rotationInterp).initial.z = fVar22;
+        (This->rotationInterp).goal.y = local_b8;
+        (This->rotationInterp).goal.z = local_b4;
+        FUN_00405c60();
+        This->flagsLow = This->flagsLow | 4;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_61;
+        goto LoopAgain;
+      case 0x3d:
+        fVar22 = (float)pAVar18->args[3];
+        if ((pAVar18->varMask & 8) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar23 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar23 = getFloat(fVar23,This);
+        }
+        uVar7 = pAVar18->args[0];
+        local_58 = fVar23;
+        local_54 = fVar22;
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        FUN_00423120(&local_58,&(This->scale).x,uVar7,(byte)pAVar18->args[1]);
+        This->flagsLow = This->flagsLow | 8;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_62;
+        goto LoopAgain;
+      case 0x3e:
+        fVar22 = (This->scale).x;
+        This->flagsLow = This->flagsLow ^ 0x200 | 8;
+        (This->scale).x = fVar22 * -1.0;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x3f:
+        fVar22 = (This->scale).y;
+        This->flagsLow = This->flagsLow ^ 0x400 | 8;
+        (This->scale).y = fVar22 * -1.0;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x40:
+        goto switchD_0044b52d_caseD_3f;
+      case 0x42:
+        in_EDX = (AnmRawInstruction *)
+                 (((uint)(ushort)pAVar18->args[0] << 0x12 ^ This->flagsLow) & 0xc0000);
+        This->flagsLow = This->flagsLow ^ (uint)in_EDX;
+        This->flagsLow =
+             ((uint)*(ushort *)((int)pAVar18->args + 2) << 0x14 ^ This->flagsLow) & 0x300000 ^
+             This->flagsLow;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x43:
+        uVar5 = (pAVar18->args[0] << 4 ^ This->flagsLow) & 0x70;
+        goto LAB_0044d80e;
+      case 0x44:
+        This->flagsLow = This->flagsLow ^ (pAVar18->args[0] << 0x16 ^ This->flagsLow) & 0x3c00000;
+        if ((This->flagsLow & 0x3c00000) == 0x2800000) {
+          FUN_004520f0();
+          nextInstruction =
+               (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+          This->currentInstruction = nextInstruction;
+          in_EDX = extraout_EDX_65;
+          goto LoopAgain;
+        }
+        break;
+      case 0x45:
+        This->layer = (uint)(byte)pAVar18->args[0];
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x46:
+        This->flagsLow = This->flagsLow & 0xfffffffe;
+switchD_0044b52d_caseD_3f:
+        pendingInterrupt = This->pendingInterrupt;
+        if (pendingInterrupt == 0) {
+          This->flagsLow = This->flagsLow | 0x1000;
+        }
+        else {
+Interrupt:
+          pAVar18 = This->beginningOfScript;
+          pAVar16 = (AnmRawInstruction *)0x0;
+          while( true ) {
+            uVar1 = pAVar18->opcode;
+            opCode = 0;
+            if (((uVar1 == 0x40) && ((int)(short)pendingInterrupt == pAVar18->args[0])) ||
+               (uVar1 == 0xffff)) break;
+            if ((uVar1 == 0x40) && (pAVar18->args[0] == 0xffffffff)) {
+              pAVar16 = pAVar18;
+            }
+            pAVar18 = (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+          }
+          This->flagsLow = This->flagsLow & 0xffffefff;
+          This->pendingInterrupt = 0;
+          if ((pAVar18->opcode == 0x40) || (pAVar18 = pAVar16, pAVar16 != (AnmRawInstruction *)0x0))
+          {
+            opCode = (This->timeInScript).current;
+            (This->interruptReturnTime).previous = (This->timeInScript).previous;
+            fVar22 = (This->timeInScript).currentF;
+            (This->interruptReturnTime).current = opCode;
+            pfVar12 = (This->timeInScript).gameSpeed;
+            (This->interruptReturnTime).currentF = fVar22;
+            opCode = (This->timeInScript).isInitialized;
+            (This->interruptReturnTime).gameSpeed = pfVar12;
+            pAVar16 = This->currentInstruction;
+            (This->interruptReturnTime).isInitialized = opCode;
+            This->interruptReturnInstr = pAVar16;
+            Timer::setCurrent((int)pAVar18->time,&This->timeInScript);
+            pendingInterrupt = pAVar18->offsetToNextInstr;
+            This->flagsLow = This->flagsLow | 1;
+            This->currentInstruction =
+                 (AnmRawInstruction *)((int)pAVar18->args + (pendingInterrupt - 8));
+            nextInstruction = extraout_ECX_00;
+            in_EDX = extraout_EDX_02;
+            goto LoopAgain;
+          }
+        }
+        Timer::add(&This->timeInScript,-1.0);
+        goto LAB_0044c2ae;
+      case 0x47:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_51;
+        }
+        (This->uvScrollVel).x = fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x48:
+        fVar22 = (float)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          fVar22 = getFloat(fVar22,This);
+          in_EDX = extraout_EDX_52;
+        }
+        (This->uvScrollVel).y = fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x49:
+        This->flagsLow = This->flagsLow ^ (pAVar18->args[0] ^ This->flagsLow) & 1;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x4a:
+        in_EDX = (AnmRawInstruction *)((pAVar18->args[0] << 0xb ^ This->flagsLow) & 0x800);
+        This->flagsLow = This->flagsLow ^ (uint)in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x4b:
+        uVar5 = (pAVar18->args[0] << 0xd ^ This->flagsLow) & 0x2000;
+        goto LAB_0044d80e;
+      case 0x4c:
+        if ((pAVar18->varMask & 1) != 0) {
+          getNextInstruction(This,pAVar18->args[0]);
+          nextInstruction = extraout_ECX_09;
+          in_EDX = extraout_EDX_49;
+        }
+        FUN_004355c0(nextInstruction,in_EDX);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_50;
+        goto LoopAgain;
+      case 0x4d:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_37;
+        }
+        *(char *)((int)&This->color2 + 2) = (char)uVar7;
+        uVar7 = pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_38;
+        }
+        *(char *)((int)&This->color2 + 1) = (char)uVar7;
+        uVar7 = pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_39;
+        }
+        *(char *)&This->color2 = (char)uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x4e:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_36;
+        }
+        *(char *)((int)&This->color2 + 3) = (char)uVar7;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x4f:
+        uVar7 = pAVar18->args[4];
+        local_c0 = (float)CONCAT13(local_c0._3_1_,(int3)This->color2);
+        if ((pAVar18->varMask & 0x10) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        if ((pAVar18->varMask & 8) == 0) {
+          local_cc._0_1_ = (undefined1)pAVar18->args[3];
+        }
+        else {
+          opCode = getNextInstruction(This,pAVar18->args[3]);
+          local_cc._0_1_ = (undefined1)opCode;
+        }
+        uVar6 = pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          uVar6 = getNextInstruction(This,uVar6);
+        }
+        local_d0._0_1_ = (byte)uVar7;
+        local_7e = (undefined1)uVar6;
+        uVar7 = pAVar18->args[0];
+        local_80 = (byte)local_d0;
+        local_7f = (undefined1)local_cc;
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        FUN_0044f080(&local_80,(byte *)&local_c0,uVar7,(byte)pAVar18->args[1]);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_57;
+        goto LoopAgain;
+      case 0x50:
+        if ((pAVar18->varMask & 4) == 0) {
+          bVar2 = (byte)pAVar18->args[2];
+        }
+        else {
+          opCode = getNextInstruction(This,pAVar18->args[2]);
+          bVar2 = (byte)opCode;
+          in_EDX = extraout_EDX_58;
+        }
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_59;
+        }
+        FUN_0044f000(uVar7,CONCAT31((int3)((uint)in_EDX >> 8),(char)pAVar18->args[1]),
+                     *(byte *)((int)&This->color2 + 3),bVar2);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_60;
+        goto LoopAgain;
+      case 0x51:
+        This->flagsLow =
+             This->flagsLow ^ ((uint)(byte)pAVar18->args[0] << 0xf ^ This->flagsLow) & 0x8000;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x52:
+        opCode = (This->interruptReturnTime).current;
+        fVar22 = (This->interruptReturnTime).currentF;
+        (This->timeInScript).previous = (This->interruptReturnTime).previous;
+        nextInstruction = (AnmRawInstruction *)(This->interruptReturnTime).gameSpeed;
+        (This->timeInScript).current = opCode;
+        in_EDX = (AnmRawInstruction *)(This->interruptReturnTime).isInitialized;
+        (This->timeInScript).currentF = fVar22;
+        pAVar18 = This->interruptReturnInstr;
+        (This->timeInScript).gameSpeed = (float *)nextInstruction;
+        (This->timeInScript).isInitialized = (int)in_EDX;
+        This->currentInstruction = pAVar18;
+        goto LoopAgain;
+      case 0x53:
+        in_EDX = (AnmRawInstruction *)
+                 (((uint)(byte)pAVar18->args[0] << 0x1b ^ This->flagsLow) & 0x8000000);
+        This->flagsLow = This->flagsLow ^ (uint)in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x54:
+        in_EDX = (AnmRawInstruction *)(This->entityPos).x;
+        fVar22 = (This->entityPos).z;
+        fVar23 = (This->entityPos).y;
+        (This->entityPos).x = 0.0;
+        (This->pos).x = (float)in_EDX;
+        (This->entityPos).y = 0.0;
+        (This->pos).y = fVar23;
+        (This->entityPos).z = 0.0;
+        (This->pos).z = fVar22;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x55:
+        This->flagsLow = This->flagsLow & 0xfe7fffff | 0x2400000;
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pvVar8 = _malloc(uVar7 * 0x38);
+        This->specialRenderData = pvVar8;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_66;
+        goto LoopAgain;
+      case 0x56:
+        in_EDX = (AnmRawInstruction *)
+                 (((uint)(byte)pAVar18->args[0] << 0x1c ^ This->flagsLow) & 0x10000000);
+        This->flagsLow = This->flagsLow ^ (uint)in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x57:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+          in_EDX = extraout_EDX_27;
+        }
+        uVar5 = (uVar7 << 0x1d ^ This->flagsLow) & 0x20000000;
+        goto LAB_0044d80e;
+      case 0x58:
+        uVar5 = ((uint)(byte)pAVar18->args[0] << 0x1e ^ This->flagsLow) & 0x40000000;
+LAB_0044d80e:
+        This->flagsLow = This->flagsLow ^ uVar5;
+        break;
+      case 0x59:
+        pAVar4 = (AnmLoaded *)pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          pAVar4 = (AnmLoaded *)getNextInstruction(This,(int)pAVar4);
+        }
+        pfVar12 = &local_4c;
+        AnmManager::makeVm(pfVar12,This->anmLoaded,(int)pAVar4,This->layer,(char)unaff_EDI);
+        uVar15 = extraout_ECX_02;
+        goto LAB_0044bbc3;
+      case 0x5a:
+        in_EDX = (AnmRawInstruction *)(This->flagsLow & 0x7fffffff);
+        This->flagsLow = pAVar18->args[0] << 0x1f | (uint)in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x5b:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pfVar12 = &local_94;
+        pAVar4 = (AnmLoaded *)FUN_00455df0(This->anmLoaded,(short)uVar7,This->layer);
+        uVar15 = extraout_ECX_07;
+        goto LAB_0044bc4a;
+      case 0x5c:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pfVar12 = &local_a4;
+        pAVar4 = (AnmLoaded *)FUN_00455bc0(This->anmLoaded,(short)uVar7,This->layer);
+        uVar15 = extraout_ECX_06;
+LAB_0044bbc3:
+        AnmManagersetVmOrClearId(uVar15,(int *)pfVar12);
+        FUN_0040ea10((int)&This->nodeAsFamilyMember);
+        *(float *)(pAVar4[3].filePath + 0x54) = (This->pos).x;
+        *(float *)(pAVar4[3].filePath + 0x58) = (This->pos).y;
+        *(float *)(pAVar4[3].filePath + 0x5c) = (This->pos).z;
+        goto LAB_0044bc80;
+      case 0x5d:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pfVar12 = &local_c4;
+        pAVar4 = (AnmLoaded *)FUN_00456020(This->anmLoaded,(short)uVar7,This->layer);
+        uVar15 = extraout_ECX_08;
+LAB_0044bc4a:
+        AnmManagersetVmOrClearId(uVar15,(int *)pfVar12);
+        FUN_0040ea10((int)&This->nodeAsFamilyMember);
+        *(float *)(pAVar4[3].filePath + 0x54) = (This->pos).x;
+        *(float *)(pAVar4[3].filePath + 0x58) = (This->pos).y;
+        *(float *)(pAVar4[3].filePath + 0x5c) = (This->pos).z;
+        goto LAB_0044bc80;
+      case 0x5e:
+        fVar22 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        (This->uVelInterp).endTime = uVar7;
+        (This->uVelInterp).bezier1 = 0.0;
+        (This->uVelInterp).bezier2 = 0.0;
+        uVar7 = pAVar18->args[1];
+        (This->uVelInterp).initial = (This->uvScrollVel).x;
+        (This->uVelInterp).method = uVar7;
+        (This->uVelInterp).goal = fVar22;
+        FUN_0044ed80();
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_63;
+        goto LoopAgain;
+      case 0x5f:
+        fVar22 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        (This->vVelInterp).endTime = uVar7;
+        (This->vVelInterp).bezier1 = 0.0;
+        (This->vVelInterp).bezier2 = 0.0;
+        fVar23 = (This->uvScrollVel).y;
+        (This->vVelInterp).method = pAVar18->args[1];
+        (This->vVelInterp).initial = fVar23;
+        (This->vVelInterp).goal = fVar22;
+        FUN_0044ed80();
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_64;
+        goto LoopAgain;
+      case 0x60:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pAVar4 = This->anmLoaded;
+        AnmManager::makeVm(&local_5c,pAVar4,uVar7,This->layer,(char)unaff_EDI);
+        AnmManagersetVmOrClearId(extraout_ECX_05,&local_5c);
+        *(float *)(pAVar4[3].filePath + 0x54) = (This->pos).x;
+        *(float *)(pAVar4[3].filePath + 0x58) = (This->pos).y;
+        *(float *)(pAVar4[3].filePath + 0x5c) = (This->pos).z;
+        *(float *)(pAVar4[3].filePath + 0x48) = (This->entityPos).x;
+        *(float *)(pAVar4[3].filePath + 0x4c) = (This->entityPos).y;
+        in_EDX = (AnmRawInstruction *)(This->entityPos).z;
+        *(AnmRawInstruction **)(pAVar4[3].filePath + 0x50) = in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x61:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pAVar4 = This->anmLoaded;
+        AnmManager::makeVm(&local_50,pAVar4,uVar7,This->layer,(char)unaff_EDI);
+        AnmManagersetVmOrClearId(extraout_ECX_03,&local_50);
+        FUN_0040ea10((int)&This->nodeAsFamilyMember);
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        *(float *)(pAVar4[3].filePath + 0x54) = fVar22;
+        fVar22 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        *(float *)(pAVar4[3].filePath + 0x58) = fVar22;
+        goto LAB_0044bc80;
+      case 0x62:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pAVar4 = This->anmLoaded;
+        AnmManager::makeVm(&local_48,pAVar4,uVar7,This->layer,(char)unaff_EDI);
+        AnmManagersetVmOrClearId(extraout_ECX_04,&local_48);
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        *(float *)(pAVar4[3].filePath + 0x54) = fVar22;
+        fVar22 = (float)pAVar18->args[2];
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        *(float *)(pAVar4[3].filePath + 0x58) = fVar22;
+LAB_0044bc80:
+        *(float *)(pAVar4[3].filePath + 0x48) = (This->entityPos).x;
+        in_EDX = (AnmRawInstruction *)(This->entityPos).y;
+        *(AnmRawInstruction **)(pAVar4[3].filePath + 0x4c) = in_EDX;
+        *(float *)(pAVar4[3].filePath + 0x50) = (This->entityPos).z;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 99:
+        FUN_00452010(&local_38);
+        FUN_0044b470(&This->spriteUvQuad[0].x);
+        FUN_0044b470(&This->spriteUvQuad[1].x);
+        FUN_0044b470(&This->spriteUvQuad[2].x);
+        FUN_0044b470(&This->spriteUvQuad[3].x);
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_68;
+        goto LoopAgain;
+      case 100:
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        in_EDX = (AnmRawInstruction *)((uVar7 * 4 ^ This->flagsHigh) & 4);
+        This->flagsHigh = This->flagsHigh ^ (uint)in_EDX;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        goto LoopAgain;
+      case 0x65:
+        fVar22 = (float)pAVar18->args[1];
+        if ((pAVar18->varMask & 2) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar23 = (float)pAVar18->args[2];
+        local_78 = fVar22;
+        if ((pAVar18->varMask & 4) != 0) {
+          fVar23 = getFloat(fVar23,This);
+        }
+        fVar22 = (float)pAVar18->args[3];
+        local_74 = fVar23;
+        if ((pAVar18->varMask & 8) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar23 = (float)pAVar18->args[7];
+        local_70 = fVar22;
+        if ((pAVar18->varMask & 0x80) != 0) {
+          fVar23 = getFloat(fVar23,This);
+        }
+        fVar22 = (float)pAVar18->args[8];
+        local_68 = fVar23;
+        if ((pAVar18->varMask & 0x100) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar23 = (float)pAVar18->args[9];
+        local_64 = fVar22;
+        if ((pAVar18->varMask & 0x200) != 0) {
+          fVar23 = getFloat(fVar23,This);
+        }
+        uVar7 = pAVar18->args[0];
+        local_60 = fVar23;
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        uVar5 = This->flagsLow;
+        (This->posInterp).endTime = uVar7;
+        (This->posInterp).bezier1.x = local_78;
+        (This->posInterp).bezier1.y = local_74;
+        (This->posInterp).bezier1.z = local_70;
+        (This->posInterp).bezier2.x = local_68;
+        (This->posInterp).bezier2.y = local_64;
+        (This->posInterp).bezier2.z = local_60;
+        (This->posInterp).method = 8;
+        if ((uVar5 & 0x100) == 0) {
+          fVar22 = (This->pos).x;
+          fVar23 = (This->pos).y;
+          fVar24 = (This->pos).z;
+        }
+        else {
+          fVar22 = (This->pos2).x;
+          fVar23 = (This->pos2).y;
+          fVar24 = (This->pos2).z;
+        }
+        (This->posInterp).initial.x = fVar22;
+        (This->posInterp).initial.y = fVar23;
+        (This->posInterp).initial.z = fVar24;
+        fVar22 = (float)pAVar18->args[6];
+        if ((pAVar18->varMask & 0x40) != 0) {
+          fVar22 = getFloat(fVar22,This);
+        }
+        fVar23 = (float)pAVar18->args[5];
+        if ((pAVar18->varMask & 0x20) != 0) {
+          fVar23 = getFloat(fVar23,This);
+        }
+        fVar24 = (float)pAVar18->args[4];
+        if ((pAVar18->varMask & 0x10) != 0) {
+          fVar24 = getFloat(fVar24,This);
+        }
+        (This->posInterp).goal.x = fVar24;
+        (This->posInterp).goal.y = fVar23;
+        (This->posInterp).goal.z = fVar22;
+        local_b0 = fVar24;
+        local_ac = fVar23;
+        local_a8 = fVar22;
+        FUN_00405c60();
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_54;
+        goto LoopAgain;
+      case 0x66:
+        This->flagsLow = This->flagsLow & 0xff7fffff | 0x3400000;
+        uVar7 = pAVar18->args[0];
+        if ((pAVar18->varMask & 1) != 0) {
+          uVar7 = getNextInstruction(This,uVar7);
+        }
+        pvVar8 = _malloc(uVar7 * 0x38);
+        This->specialRenderData = pvVar8;
+        nextInstruction =
+             (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+        This->currentInstruction = nextInstruction;
+        in_EDX = extraout_EDX_67;
+        goto LoopAgain;
+      case 0x67:
+        goto switchD_0044b52d_caseD_66;
+      }
+      nextInstruction = (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8))
+      ;
+      This->currentInstruction = nextInstruction;
+      goto LoopAgain;
+    }
+LAB_0044c2ae:
+    fVar22 = (This->angularVelocity).x;
+    uVar14 = (undefined2)((uint)opCode >> 0x10);
+    if (NAN(fVar22) == (fVar22 == 0.0)) {
+      local_c4 = g_gameSpeed * (This->angularVelocity).x;
+      fVar21 = FUN_00458e30((This->rotation).x,local_c4);
+      (This->rotation).x = (float)fVar21;
+      This->flagsLow = This->flagsLow | 4;
+    }
+    fVar22 = (This->angularVelocity).y;
+    if (NAN(fVar22) == (fVar22 == 0.0)) {
+      local_c4 = (This->angularVelocity).y * g_gameSpeed;
+      fVar21 = FUN_00458e30((This->rotation).y,local_c4);
+      This->flagsLow = This->flagsLow | 4;
+      (This->rotation).y = (float)fVar21;
+    }
+    fVar22 = (This->angularVelocity).z;
+    if (NAN(fVar22) == (fVar22 == 0.0)) {
+      local_c4 = g_gameSpeed * (This->angularVelocity).z;
+      fVar21 = FUN_00458e30((This->rotation).z,local_c4);
+      This->flagsLow = This->flagsLow | 4;
+      (This->rotation).z = (float)fVar21;
+    }
+    fVar23 = g_gameSpeed;
+    fVar22 = (This->scaleGrowth).y;
+    if (NAN(fVar22) == (fVar22 == 0.0)) {
+      This->flagsLow = This->flagsLow | 8;
+      (This->scale).y = fVar23 * (This->scaleGrowth).y + (This->scale).y;
+    }
+    fVar22 = (This->scaleGrowth).x;
+    if (NAN(fVar22) == (fVar22 == 0.0)) {
+      fVar22 = (This->scaleGrowth).x * g_gameSpeed;
+      This->flagsLow = This->flagsLow | 0xc;
+      (This->scale).x = fVar22 + (This->scale).x;
+    }
+    fVar22 = g_gameSpeed * (This->uvScrollVel).x + (This->uvScrollPos).x;
+    (This->uvScrollPos).x = fVar22;
+    if (NAN(fVar22) || 1.0 < fVar22 == (fVar22 == 1.0)) {
+      if (fVar22 < 0.0 != NAN(fVar22)) {
+        (This->uvScrollPos).x = fVar22 + 1.0;
+      }
+    }
+    else {
+      (This->uvScrollPos).x = fVar22 - 1.0;
+    }
+    local_c4 = (This->uvScrollVel).y * g_gameSpeed + (This->uvScrollPos).y;
+    (This->uvScrollPos).y = local_c4;
+    pfVar12 = (float *)CONCAT22(uVar14,(ushort)(local_c4 < 1.0) << 8 | (ushort)NAN(local_c4) << 10 |
+                                       (ushort)(local_c4 == 1.0) << 0xe);
+    if (local_c4 < 1.0) {
+      pfVar12 = (float *)CONCAT22(uVar14,(ushort)(local_c4 < 0.0) << 8 | (ushort)NAN(local_c4) << 10
+                                         | (ushort)(local_c4 == 0.0) << 0xe);
+      if (local_c4 < 0.0 != NAN(local_c4)) {
+        (This->uvScrollPos).y = local_c4 + 1.0;
+      }
+    }
+    else {
+      (This->uvScrollPos).y = local_c4 - 1.0;
+    }
+    if ((This->flagsLow & 0x2000) != 0) {
+      (This->entityPos).x = (This->entityPos).x + (float)g_supervisor.stageCam.mystery[3];
+      (This->entityPos).y = (float)g_supervisor.stageCam.mystery[4] + (This->entityPos).y;
+      (This->entityPos).z = (This->entityPos).z + (float)g_supervisor.stageCam.mystery[5];
+    }
+    if ((This->flagsHigh & 4) != 0) {
+      FUN_00452010(&local_38);
+      This->spriteUvQuad[0].x = local_38 / 640.0;
+      local_34 = local_34 / 480.0;
+      This->spriteUvQuad[0].y = local_34;
+      if (local_38 / 640.0 < 0.0) {
+        This->spriteUvQuad[0].x = 0.0;
+      }
+      if (local_34 < 0.0 != NAN(local_34)) {
+        This->spriteUvQuad[0].y = 0.0;
+      }
+      local_2c = local_2c / 640.0;
+      This->spriteUvQuad[1].x = local_2c;
+      local_28 = local_28 / 480.0;
+      This->spriteUvQuad[1].y = local_28;
+      if (local_2c < 0.0 != NAN(local_2c)) {
+        This->spriteUvQuad[1].x = 0.0;
+      }
+      if (local_28 < 0.0 != NAN(local_28)) {
+        This->spriteUvQuad[1].y = 0.0;
+      }
+      local_20 = local_20 / 640.0;
+      This->spriteUvQuad[2].x = local_20;
+      local_1c = local_1c / 480.0;
+      This->spriteUvQuad[2].y = local_1c;
+      if (local_20 < 0.0 != NAN(local_20)) {
+        This->spriteUvQuad[2].x = 0.0;
+      }
+      if (local_1c < 0.0 != NAN(local_1c)) {
+        This->spriteUvQuad[2].y = 0.0;
+      }
+      local_14 = local_14 / 640.0;
+      This->spriteUvQuad[3].x = local_14;
+      local_c4 = local_10 / 480.0;
+      This->spriteUvQuad[3].y = local_c4;
+      if (local_14 < 0.0 != NAN(local_14)) {
+        This->spriteUvQuad[3].x = 0.0;
+      }
+      pfVar12 = (float *)CONCAT22(extraout_var,
+                                  (ushort)(0.0 < local_c4) << 8 | (ushort)NAN(local_c4) << 10 |
+                                  (ushort)(local_c4 == 0.0) << 0xe);
+      if (0.0 >= local_c4 && (local_c4 == 0.0) == 0) {
+        This->spriteUvQuad[3].y = 0.0;
+      }
+    }
+    if ((This->posInterp).endTime != 0) {
+      if ((This->flagsLow & 0x100) == 0) {
+        InterpFloat3::step(&local_bc,(float *)&This->posInterp);
+        (This->pos).x = *pfVar12;
+        (This->pos).y = pfVar12[1];
+        pfVar12 = (float *)pfVar12[2];
+        (This->pos).z = (float)pfVar12;
+      }
+      else {
+        InterpFloat3::step(&local_bc,(float *)&This->posInterp);
+        (This->pos2).x = *pfVar12;
+        (This->pos2).y = pfVar12[1];
+        pfVar12 = (float *)pfVar12[2];
+        (This->pos2).z = (float)pfVar12;
+      }
+    }
+    if ((This->rgbInterp).endTime != 0) {
+      This_00 = &This->rgbInterp;
+      InterpInt3::step(This_00);
+      pfVar12 = (float *)CONCAT31((int3)((uint)This_00 >> 8),local_bc._0_1_);
+      *(undefined1 *)((int)&This->color1 + 2) = local_b4._0_1_;
+      *(undefined1 *)((int)&This->color1 + 1) = local_b8._0_1_;
+      *(undefined1 *)&This->color1 = local_bc._0_1_;
+    }
+    if ((This->alphaInterp).endTime != 0) {
+      pfVar12 = (float *)InterpInt::step(&This->alphaInterp);
+      *(char *)((int)&This->color1 + 3) = (char)pfVar12;
+    }
+    if ((This->scaleInterp).endTime != 0) {
+      pfVar12 = (float *)FUN_0044e910();
+      (This->scale).x = *pfVar12;
+      pfVar12 = (float *)pfVar12[1];
+      This->flagsLow = This->flagsLow | 8;
+      (This->scale).y = (float)pfVar12;
+    }
+    if ((This->rotationInterp).endTime != 0) {
+      InterpFloat3::step(&local_bc,(float *)&This->rotationInterp);
+      (This->rotation).x = *pfVar12;
+      (This->rotation).y = pfVar12[1];
+      fVar22 = pfVar12[2];
+      This->flagsLow = This->flagsLow | 4;
+      (This->rotation).z = fVar22;
+    }
+    if ((This->rgb2Interp).endTime != 0) {
+      InterpInt3::step(&This->rgb2Interp);
+      *(undefined1 *)((int)&This->color2 + 2) = local_b4._0_1_;
+      *(undefined1 *)((int)&This->color2 + 1) = local_b8._0_1_;
+      *(undefined1 *)&This->color2 = local_bc._0_1_;
+    }
+    if ((This->alpha2Interp).endTime != 0) {
+      opCode = InterpInt::step(&This->alpha2Interp);
+      *(char *)((int)&This->color2 + 3) = (char)opCode;
+    }
+    if ((This->uVelInterp).endTime != 0) {
+      fVar21 = FUN_0044ebd0();
+      (This->uvScrollVel).x = (float)fVar21;
+    }
+    if ((This->vVelInterp).endTime != 0) {
+      fVar21 = FUN_0044ebd0();
+      (This->uvScrollVel).y = (float)fVar21;
+    }
+    uVar5 = This->flagsLow;
+    uVar13 = uVar5 >> 0x16 & 0xf;
+    if (uVar13 == 9) {
+      local_c0 = (This->rotation).z;
+      local_d0 = (AnmRawInstruction *)(This->intVars[0] + -1);
+      local_c4 = (float)(int)local_d0;
+      pfVar12 = (float *)This->specialRenderData;
+      local_a4 = 6.2831855 / local_c4;
+      local_c8 = 0.0;
+      local_94 = (float)This->intVars[1] / local_c4;
+      if ((uVar5 & 0x8000) == 0) {
+        fVar22 = (float)This->color1;
+      }
+      else {
+        fVar22 = (float)This->color2;
+      }
+      pfVar17 = pfVar12;
+      if (0 < (int)local_d0) {
+        do {
+          pfVar17[4] = fVar22;
+          pfVar17[3] = 1.0;
+          pfVar17[5] = (This->uvScrollPos).x + This->spriteUvQuad[0].x;
+          pfVar17[6] = local_c8 + (This->uvScrollPos).y;
+          local_c4 = (This->scale).x * 0.5 + (This->scale).y;
+          FUN_0044ef80(pfVar17,local_c0,local_c4);
+          pfVar17[2] = 0.0;
+          local_bc = (This->pos).x + (This->pos2).x;
+          local_b8 = (This->pos2).y + (This->pos).y;
+          local_b4 = (This->pos2).z + (This->pos).z;
+          local_b0 = local_bc + (This->entityPos).x;
+          local_ac = (This->entityPos).y + local_b8;
+          local_a8 = (This->entityPos).z + local_b4;
+          *pfVar17 = *pfVar17 + local_b0;
+          pfVar17[1] = local_ac + pfVar17[1];
+          pfVar17[2] = local_a8 + 0.0;
+          pfVar17[0xb] = fVar22;
+          pfVar17[10] = 1.0;
+          pfVar17[0xc] = (This->uvScrollPos).x + This->spriteUvQuad[1].x;
+          pfVar17[0xd] = local_c8 + (This->uvScrollPos).y;
+          local_c4 = (This->scale).y - (This->scale).x * 0.5;
+          FUN_0044ef80(pfVar17 + 7,local_c0,local_c4);
+          pfVar17[9] = 0.0;
+          local_90 = (This->pos2).x + (This->pos).x;
+          local_8c = (This->pos2).y + (This->pos).y;
+          local_88 = (This->pos2).z + (This->pos).z;
+          pfVar12 = pfVar17 + 0xe;
+          local_a0 = local_90 + (This->entityPos).x;
+          local_9c = (AnmRawInstruction *)(local_8c + (This->entityPos).y);
+          local_98 = local_88 + (This->entityPos).z;
+          pfVar17[7] = pfVar17[7] + local_a0;
+          pfVar17[8] = (float)local_9c + pfVar17[8];
+          pfVar17[9] = local_98 + 0.0;
+          local_c8 = local_94 + local_c8;
+          fVar21 = FUN_00458e30(local_c0,local_a4);
+          local_d0 = (AnmRawInstruction *)((int)local_d0 + -1);
+          local_c0 = (float)fVar21;
+          pfVar17 = pfVar12;
+        } while (local_d0 != (AnmRawInstruction *)0x0);
+      }
+      pfVar17 = (float *)This->specialRenderData;
+      pfVar19 = pfVar12;
+      for (opCode = 7; opCode != 0; opCode = opCode + -1) {
+        *pfVar19 = *pfVar17;
+        pfVar17 = pfVar17 + 1;
+        pfVar19 = pfVar19 + 1;
+      }
+      pfVar12[6] = local_c8 + (This->uvScrollPos).y;
+      pfVar17 = (float *)((int)This->specialRenderData + 0x1c);
+      pfVar19 = pfVar12 + 7;
+      for (opCode = 7; opCode != 0; opCode = opCode + -1) {
+        *pfVar19 = *pfVar17;
+        pfVar17 = pfVar17 + 1;
+        pfVar19 = pfVar19 + 1;
+      }
+      pfVar12[0xd] = local_c8 + (This->uvScrollPos).y;
+    }
+    else if (uVar13 == 0xd) {
+      opCode = This->intVars[0];
+      local_c4 = (This->rotation).z - (This->rotation).x * 0.5;
+      fVar21 = FN_normalizeAngle(local_c4);
+      local_c0 = (float)fVar21;
+      local_c4 = (float)(opCode + -1);
+      pfVar12 = (float *)This->specialRenderData;
+      local_a4 = (This->rotation).x / local_c4;
+      local_c8 = 0.0;
+      local_94 = (float)This->intVars[1] / local_c4;
+      if ((uVar5 & 0x8000) == 0) {
+        fVar22 = (float)This->color1;
+      }
+      else {
+        fVar22 = (float)This->color2;
+      }
+      local_d0 = (AnmRawInstruction *)This->intVars[0];
+      if (0 < (int)local_d0) {
+        do {
+          pfVar12[4] = fVar22;
+          pfVar12[3] = 1.0;
+          pfVar12[5] = (This->uvScrollPos).x + This->spriteUvQuad[0].x;
+          pfVar12[6] = local_c8 + (This->uvScrollPos).y;
+          local_c4 = (This->scale).x * 0.5 + (This->scale).y;
+          FUN_0044ef80(pfVar12,local_c0,local_c4);
+          pfVar12[2] = 0.0;
+          local_bc = (This->pos2).x + (This->pos).x;
+          local_b8 = (This->pos2).y + (This->pos).y;
+          local_b4 = (This->pos2).z + (This->pos).z;
+          local_b0 = (This->entityPos).x + local_bc;
+          local_ac = (This->entityPos).y + local_b8;
+          local_a8 = (This->entityPos).z + local_b4;
+          *pfVar12 = local_b0 + *pfVar12;
+          pfVar12[1] = local_ac + pfVar12[1];
+          pfVar12[2] = local_a8 + 0.0;
+          pfVar12[0xb] = fVar22;
+          pfVar12[10] = 1.0;
+          pfVar12[0xc] = (This->uvScrollPos).x + This->spriteUvQuad[1].x;
+          pfVar12[0xd] = local_c8 + (This->uvScrollPos).y;
+          local_c4 = (This->scale).y - (This->scale).x * 0.5;
+          FUN_0044ef80(pfVar12 + 7,local_c0,local_c4);
+          pfVar12[9] = 0.0;
+          local_90 = (This->pos2).x + (This->pos).x;
+          local_8c = (This->pos2).y + (This->pos).y;
+          local_88 = (This->pos2).z + (This->pos).z;
+          local_a0 = local_90 + (This->entityPos).x;
+          local_9c = (AnmRawInstruction *)(local_8c + (This->entityPos).y);
+          local_98 = local_88 + (This->entityPos).z;
+          pfVar12[7] = local_a0 + pfVar12[7];
+          pfVar12[8] = (float)local_9c + pfVar12[8];
+          pfVar12[9] = local_98 + 0.0;
+          local_c8 = local_94 + local_c8;
+          fVar21 = FUN_00458e30(local_c0,local_a4);
+          local_d0 = (AnmRawInstruction *)((int)local_d0 + -1);
+          local_c0 = (float)fVar21;
+          pfVar12 = pfVar12 + 0xe;
+        } while (local_d0 != (AnmRawInstruction *)0x0);
+      }
+    }
+    if (((code *)This->unknownFunc != (code *)0x0) &&
+       (opCode = (*(code *)This->unknownFunc)(), opCode != 0)) {
+      return;
+    }
+    opCode = (This->timeInScript).current;
+    pfVar12 = (This->timeInScript).gameSpeed;
+    (This->timeInScript).previous = opCode;
+    if ((0.99 < *pfVar12) && (*pfVar12 < 1.01)) {
+      (This->timeInScript).current = opCode + 1;
+      (This->timeInScript).currentF = (This->timeInScript).currentF + 1.0;
+      g_gameSpeed = gameSpeed;
+      return;
+    }
+    local_c4 = *pfVar12 + (This->timeInScript).currentF;
+    (This->timeInScript).currentF = local_c4;
+    opCode = FN_roundFloat(local_c4);
+    (This->timeInScript).current = opCode;
+    g_gameSpeed = gameSpeed;
+  }
+  return;
+switchD_0044b52d_caseD_66:
+  uVar5 = 1;
+  This->flagsLow = This->flagsLow | 1;
+  if (This->spriteMappingFunc == (spriteMappingFunction *)0x0) {
+    if ((pAVar18->varMask & 1) == 0) {
+      local_c8 = (float)pAVar18->args[0];
+    }
+    else {
+      uVar5 = getNextInstruction(This,pAVar18->args[0]);
+      local_c8 = (float)uVar5;
+    }
+    if ((pAVar18->varMask & 2) == 0) {
+      local_cc = pAVar18->args[1];
+    }
+    else {
+      uVar5 = getNextInstruction(This,pAVar18->args[1]);
+      local_cc = uVar5;
+    }
+    FUN_00458c30(g_splitTime.shorts);
+    opCode = uVar5 % local_cc + (int)local_c8;
+  }
+  else {
+    if ((pAVar18->varMask & 1) == 0) {
+      local_c8 = (float)pAVar18->args[0];
+    }
+    else {
+      local_c8 = (float)getNextInstruction(This,pAVar18->args[0]);
+    }
+    uVar5 = pAVar18->args[1];
+    if ((pAVar18->varMask & 2) != 0) {
+      uVar5 = getNextInstruction(This,uVar5);
+    }
+    uVar13 = uVar5;
+    FUN_00458c30(g_splitTime.shorts);
+    opCode = (*This->spriteMappingFunc)(This,(void *)(uVar13 % uVar5 + (int)local_c8));
+  }
+  setupTextureQuadAndMatrices(This,opCode,This->anmLoaded);
+  This->timeOfLastSpriteSet = (This->timeInScript).current;
+  nextInstruction = (AnmRawInstruction *)((int)pAVar18->args + (pAVar18->offsetToNextInstr - 8));
+  This->currentInstruction = nextInstruction;
+  in_EDX = extraout_EDX_29;
+  goto LoopAgain;
+}
+

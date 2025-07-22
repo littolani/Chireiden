@@ -34,14 +34,17 @@ void AnmVm::initialize()
 }
 
 void AnmVm::run() {
-    while (currentInstruction != nullptr) {
-        if (flagsLow & 0x20000) {
+    while (currentInstruction != nullptr)
+    {
+        if (flagsLow & 0x20000)
             return; // Early exit based on flag
-        }
-        if (pendingInterrupt != 0) {
+
+        if (pendingInterrupt != 0)
+        {
             // Interrupt handling: search for opcode 64 with matching label
             AnmRawInstruction* instr = beginningOfScript;
-            while (instr->opcode != 0xFFFF) {
+            while (instr->opcode != 0xFFFF)
+            {
                 if (instr->opcode == 64 && instr->args[0] == pendingInterrupt) {
                     interruptReturnInstr = currentInstruction;
                     interruptReturnTime = timeInScript;
@@ -53,10 +56,14 @@ void AnmVm::run() {
                 }
                 instr = (AnmRawInstruction*)((char*)instr + instr->offsetToNextInstr);
             }
-        } else if (currentInstruction->time <= timeInScript.m_current) {
+        } 
+        
+        else if (currentInstruction->time <= timeInScript.m_current)
+        {
             AnmRawInstruction* instr = currentInstruction;
             uint16_t opcode = instr->opcode;
-            switch (opcode) {
+            switch (opcode)
+            {
                 // Does nothing.
                 case 0: // nop
                     break;
@@ -91,15 +98,16 @@ void AnmVm::run() {
 
                 // Decrement x and then jump if x > 0. You can use this to repeat a loop a fixed number of times.
                 case 5: // jmpDec(int& x, int dest, int t)
+                {
+                    int* x = getIntVarPtr(this, instr->args[0]);
+                    if (*x > 0)
                     {
-                        int* x = getIntVarPtr(this, instr->args[0]);
-                        if (*x > 0) {
-                            *x -= 1;
-                            currentInstruction = (AnmRawInstruction*)((char*)beginningOfScript + getIntArg(this, instr, 1));
-                            timeInScript.setCurrent(getIntArg(this, instr, 2));
-                        }
+                        *x -= 1;
+                        currentInstruction = (AnmRawInstruction*)((char*)beginningOfScript + getIntArg(this, instr, 1));
+                        timeInScript.setCurrent(getIntArg(this, instr, 2));
                     }
-                    break;
+                }
+                break;
 
                 // Does a = b.
                 case 6: // iset(int& a, int b)
