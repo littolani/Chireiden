@@ -5,5 +5,8 @@
 
 class LaserInfinite : public LaserBase
 {
+public:
+    
 
+    static int computeCircleAABBCollision(LaserInfinite* This, Float2* targetPos, float radius);
 };

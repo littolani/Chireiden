@@ -41,4 +41,5 @@ int LaserManager::allocateNewLaser(int mode)
     (*((laserLine->laserData).laserDataVtable_0x0)->vfunction2)(&laserLine->laserData);
     return laserManager->someLimit;
     #endif
+    return 0;
 }

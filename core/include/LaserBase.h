@@ -53,11 +53,11 @@ public:
     uint32_t u1_0x10;                 // 0x10
     Timer timer_0x14;                 // 0x14
     Timer timer_0x28;                 // 0x28
-    Float3 laserBasePosition;    // 0x3c
-    Float3 vec_0x48;             // 0x48
+    Float3 laserBasePosition;         // 0x3c
+    Float3 vec_0x48;                  // 0x48
     float laserAngle;                 // 0x54
-    float totalLength;                // 0x58
-    float someFloat_0x5c;             // 0x5c
+    float laserLength;                // 0x58
+    float laserWidth;                 // 0x5c
     float currentTime_0x60;           // 0x60
     float someSmallFloat_0x64;        // 0x64
     int idk0;                         // 0x68
@@ -69,7 +69,7 @@ public:
     Timer timer1;                     // 0x424
     int bulletType;                   // 0x438
     short short_0x43c;                // 0x43c
-    short short_0x43e;                // 0x43e
+    short scriptNumber;              // 0x43e
 
     LaserBase();
 };

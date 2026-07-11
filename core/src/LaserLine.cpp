@@ -21,7 +21,7 @@ int LaserLine::createOrDestroyLaserSegments(LaserLine* This, AnmId anmId, int ca
     spawnLocation = This->laserBasePosition + step;
 
     step *= 2; // Double the step vector to 16.0 units for the loop stride
-    if (16.0f < This->totalLength)
+    if (16.0f < This->laserLength)
     {
         do
         {
@@ -59,7 +59,7 @@ int LaserLine::createOrDestroyLaserSegments(LaserLine* This, AnmId anmId, int ca
             spawnLocation += step;
             currentLength += 16.0f;
 
-        } while (currentLength + 8.0f < This->totalLength);
+        } while (currentLength + 8.0f < This->laserLength);
     }
 
     This->opcode = 1;
