@@ -14,27 +14,6 @@ struct BoundingBox3
     Float3 maxPos;
 };
 
-struct Shooter
-{
-    uint8_t fireRate;
-    uint8_t startDelay;
-    uint16_t damage;
-    Float2 offset;
-    Float2 hitbox;
-    float angle;
-    float speed;
-    uint8_t option;
-    char kind;
-    int16_t anmScript;
-    int16_t anmScriptHit;
-    int16_t sfx;
-    void* onInit;
-    void* onTick;
-    void* onDraw;
-    void* onHit;
-};
-ASSERT_SIZE(Shooter, 0x34);
-
 struct PlayerBullet
 {
     Timer timer0;
@@ -56,20 +35,23 @@ struct PlayerBullet
     Shooter* shooter;
 };
 
-struct PlayerOption
+struct PlayerAbility
 {
-    int idk[7];
-    float targetAngleUnfocused;
-    float targetDistanceUnfocused;
-    float targetAngleFocused;
-    float targetDistanceFocused;
-    int idk2[7];
-    AnmId anotherAnmId;
-    int idk3[2];
-    Int2 maybeTargetPosSubpixel;
-    int idk4[2];
-    Int2 int2_64;
-    Int2 int2_6c;
+    int unk0[7];                    // <0x0>
+    float targetAngleUnfocused;     // <0x1c>
+    float targetDistanceUnfocused;  // <0x20>
+    float targetAngleFocused;       // <0x24>
+    float targetDistanceFocused;    // <0x28>
+    int unk2;                       // <0x2c>
+    float someAngleFloat;           // <0x30>
+    int unk3[5];                    // <0x34> 
+    AnmId anotherAnmId;             // <0x48>
+    int unk4;                       // <0x4c>
+    Int2 currentPosSubpixel;        // <0x54>
+    Int2 previousPosSubpixel;       // <0x5c>
+    int g;
+    Int2 targetOffsetsUnfocused;
+    Int2 targetOffsetsFocused;
     Int2 marisaBPreferredOffsetsByFormtion[5];
     int idk5[3];
     float angle;
@@ -78,12 +60,12 @@ struct PlayerOption
     int idk7[4];
     Float2 someOtherFloat;
     int optionId;
-    int resetFlagMaybe;
+    int resetFlag;
     int idk8;
-    void* someCallback;
+    void(*update)(PlayerAbility*);
     void* someDrawCallback;
 };
-ASSERT_SIZE(PlayerOption, 0xe4);
+ASSERT_SIZE(PlayerAbility, 0xe4);
 
 struct PlayerDamageSource
 {
@@ -140,11 +122,16 @@ public:
     Timer timer2;                                          // <0x958>
     PlayerBullet playerBullets[255];                       // <0x96c>
     AnmId anmIdFocusedHitbox;                              // <0x7500>
-    PlayerOption playerOptions[8];                         // <0x7504>
-    int idk6[27];                                          // <0x7c24>
-    int reimu_c_related_probably_0x7c90;                   // <0x7c90>
-    int idk7;
-    int idk8;                          
+    int unk[23];                                           // <0x7504>
+    int anotherSpecialField;                               // <0x7560>
+    int a;                                                 // <0x7564>
+    int b;                                                 // <0x7568>
+    AnmId vm_id_0x756c;                                    // <0x756c>
+    PlayerAbility playerAbilities[8];                      // <0x7570>
+    int reimu_c_flag_probably_0x7c90;                      // <0x7c90>
+    int idk7;                                              // <0x7c94>
+    uint8_t idk8;                                          // <0x7c98>
+    uint8_t padding[3];                                    // <0x7c99>
     PlayerDamageSource damageSources[33];                  // <0x7c9c>
     int shooterOptions[4];                                 // <0x8b90>
     int percentMovedByOptions;                             // <0x8ba0>
@@ -174,13 +161,18 @@ public:
     static int loadShotFile(Player* This, const char* filename);
 
     // 0x4336a0
-    static void optionCallbackReimuA();
+    static void optionCallbackReimuA(Player* This);
 
     // 0x4337b0
     static void optionCallbackReimuC(Player* This);
 
+    static int optionCallbackReimuB(Player* This);
+    static int optionCallbackMarisaA(Player* This);
+    static int optionCallbackMarisaB(Player* This);
+    static int optionCallbackMarisaC(Player* This);
+
     // 0x430290
-    static int move(Player* This);
+    static void move(Player* This);
 
     // 0x42f760 
     // Player();
@@ -192,7 +184,7 @@ public:
     static void release(Player* This);
 
     // 0x432cc0
-    static void repopulateOptions(Player* This);
+    static void repopulateAbilities(Player* This);
 
     // 0x410610
     static void resetOptions(Player* This);
@@ -204,7 +196,7 @@ public:
     static void shoot(Player* This, int currentTime);
 
     // 0x434380
-    static int shootingTick(Player* This, EnemyManager* enemyManager, int someNumber);
+    static int shootingTick(Player* This);
 
     // 0x433f90
     static int shootOneBullet(Player* This, Float3* position, int currentTime, Shooter* shooter);
@@ -227,5 +219,13 @@ public:
     {
         return ChainCallbackResult::Continue; //onTick(reinterpret_cast<Player*>(This));
     }
+
+    static void optionCallbackReimuA(PlayerAbility* ability);
+    static void optionCallbackReimuB(PlayerAbility* ability);
+    static void optionCallbackReimuC(PlayerAbility* ability);
+    static void optionCallbackMarisaA(PlayerAbility* ability);
+    static void optionCallbackMarisaB(PlayerAbility* ability);
+    static void optionCallbackMarisaC(PlayerAbility* ability);
+
 };
 ASSERT_SIZE(Player, 0x8d24);

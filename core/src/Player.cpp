@@ -1,11 +1,18 @@
 #include "AnmManager.h"
 #include "Bomb.h"
+#include "BulletManager.h"
+#include "Chain.h"
+#include "EnemyManager.h"
 #include "Globals.h"
+#include "Gui.h"
+#include "InputManager.h"
+#include "ItemManager.h"
 #include "Player.h"
 #include "SoundManager.h"
 #include "Spellcard.h"
-#include <Chain.h>
-#include <cstdint>
+#include "Shottypes.h"
+#include <GeneratedSymbols.h>
+#include <Vectors.h>
 
 int Player::shootOneBullet(Player* This, Float3* position, int currentTime, Shooter* shooter)
 {
@@ -38,9 +45,9 @@ int Player::shootOneBullet(Player* This, Float3* position, int currentTime, Shoo
     }
     else
     {
-        auto& opt = This->playerOptions[shooter->option];
-        bullet->position.x = opt.someOtherFloat.x * 0.0078125f;
-        bullet->position.y = opt.someOtherFloat.y * 0.0078125f;
+        auto& ability = This->playerAbilities[shooter->option];
+        bullet->position.x = ability.someOtherFloat.x * 0.0078125f;
+        bullet->position.y = ability.someOtherFloat.y * 0.0078125f;
         bullet->position.z = 0.0f;
     }
 
@@ -56,7 +63,7 @@ int Player::shootOneBullet(Player* This, Float3* position, int currentTime, Shoo
         if (shooter->angle < 995.0f || shooter->option == 0)
             finalAngle = shooter->angle;
         else
-            finalAngle = normalizeAngle(This->playerOptions[shooter->option].angle);
+            finalAngle = normalizeAngle(This->playerAbilities[shooter->option].angle);
     }
     else {
         if (shooter->option == 0) {
@@ -68,16 +75,15 @@ int Player::shootOneBullet(Player* This, Float3* position, int currentTime, Shoo
             float rngFloat = (float)(int)rngVal;
             if ((int)rngVal < 0) rngFloat += 4294967296.0f;
 
-            // 4.656613e-10 is approx 2^-31. rng * 2^-31 - 1.0 gives range [-1, 1].
-            // Multiplied by PI/12 (15 degrees).
+            // GET RID OF THE COMPILER FLOAT ARTIFACTS
+
             float randomOffset = ((rngFloat * 4.6566129e-10f - 1.0f) * 3.1415927f) / 12.0f;
-            finalAngle = randomOffset + This->playerOptions[shooter->option].angle;
+            finalAngle = randomOffset + This->playerAbilities[shooter->option].angle;
 
             // Normalize
             finalAngle = normalizeAngle(finalAngle);
             bullet->angle = finalAngle; // Temporary storage?
 
-            // 0x43412a: Randomize speed
             rngVal = AnmVm::rng(&g_replayRngContext);
             rngFloat = (float)(int)rngVal;
             if ((int)rngVal < 0) rngFloat += 4294967296.0f;
@@ -121,7 +127,7 @@ int Player::shootOneBullet(Player* This, Float3* position, int currentTime, Shoo
     AnmVm* vm = nullptr;
     if (vmId.id != 0)
     {
-        for (AnmVmList* node = g_anmManager->m_primaryGlobalNext; node; node = node->next)
+        for (AnmVmListNode* node = g_anmManager->m_primaryGlobalHead; node; node = node->next)
         {
             if (node->entry->m_id.id == vmId.id) {
                 vm = node->entry;
@@ -129,7 +135,7 @@ int Player::shootOneBullet(Player* This, Float3* position, int currentTime, Shoo
             }
         }
 
-        for (AnmVmList* node = g_anmManager->m_secondaryGlobalNext; node; node = node->next)
+        for (AnmVmListNode* node = g_anmManager->m_secondaryGlobalHead; node; node = node->next)
         {
             if (node->entry->m_id.id == vmId.id) {
                 vm = node->entry;
@@ -193,235 +199,371 @@ PlayerDamageSource* Player::createDamageSource(Player* This, Float3* v, float ar
     return ds;
 }
 
-#if 0
-int Player::move(Player* This)
+void Player::move(Player* This)
 {
-    // Bits: 0x10=Up, 0x20=Down, 0x40=Left, 0x80=Right
-    uint8_t inputFlags = _g_playerShootingRelatedFlag;
+    uint8_t inputFlags = static_cast<uint8_t>(g_inputManager.currentKeysDown);
     int attemptedDirection = 0;
 
-    // Check diagonals first (specific bit combinations)
-    if ((inputFlags & 0x50) == 0x50) attemptedDirection = 5; // Up-Left
-    else if ((inputFlags & 0x60) == 0x60) attemptedDirection = 7; // Up-Right
-    else if ((inputFlags & 0x90) == 0x90) attemptedDirection = 6; // Down-Left
-    else if ((inputFlags & 0xA0) == 0xA0) attemptedDirection = 8; // Down-Right
-    else
+    // Check diagonals
+    if ((inputFlags & 0x50) == 0x50)
+        attemptedDirection = 5;      // Up-Left
+    else if ((inputFlags & 0x60) == 0x60)
+        attemptedDirection = 7; // Up-Right
+    else if ((inputFlags & 0x90) == 0x90)
+        attemptedDirection = 6; // Down-Left
+    else if ((inputFlags & 0xA0) == 0xA0)
+        attemptedDirection = 8; // Down-Right
+    else if ((inputFlags & 0x20) == 0)
     {
-        bool isDown = (inputFlags & 0x20);
-        bool isUp = (inputFlags & 0x10);
-        bool isLeft = (inputFlags & 0x40);
-        bool isRight = (inputFlags & 0x80);
-
-        if (!isDown)
+        if ((inputFlags & 0x10) == 0)
         {
-            if (!isUp)
+            if ((inputFlags & 0x40) == 0)
             {
-                if (!isLeft)
-                {
-                    if (isRight)
-                        attemptedDirection = 4; // Right
-                    else
-                        attemptedDirection = 0; // Neutral
-                }
+                if (inputFlags & 0x80)
+                    attemptedDirection = 4; // Right
                 else
-                    attemptedDirection = 3; // Left
+                    attemptedDirection = 0; // Neutral
             }
-            else
-                attemptedDirection = 1; // Up
+            else attemptedDirection = 3; // Left
         }
-        else
-            attemptedDirection = 2; // Down
+        else attemptedDirection = 1; // Up
     }
+    else attemptedDirection = 2; // Down
 
     This->attemptedDirection = attemptedDirection;
 
-
-    bool enemiesActive = (g_enemyManager && g_enemyManager->someIndicator != 0);
-    bool canFocus = enemiesActive || (This->timer2.current >= 4);
-
-    if (!canFocus) {
+    // Focus Logic?
+    // If enemy manager restricts it, or if player timer2 < 4, lock out of focus mode?
+    if ((g_enemyManager == nullptr || g_enemyManager->someIndicator == 0) || (This->timer2.m_current < 4))
+    {
         This->isFocused = 0;
-        This->percentMovedByOptions = 30; // 0x1e: Force a specific state/timer
+        This->percentMovedByOptions = 0x1e;
     }
-    else {
-        // Bit 3 (0x08) usually corresponds to the Focus key (Shift)
-        This->isFocused = (inputFlags >> 3) & 1;
+    else
+    {
+        This->isFocused = (g_inputManager.currentKeysDown >> 3) & 1; // Focus key (Shift)
+        if (This->isFocused) puts("focused\n");
     }
 
     int velX = 0;
     int velY = 0;
 
-    // Handle Reimu A's teleporting at edges
-    if (This->reimu_a_gapping_state == 99) { // 0x63
+    // Handle Reimu A's teleporting at edges (State 99 / 100)
+    if (This->reimuAGappingState == 99)
         velX = -150;
-    }
-    else if (This->reimu_a_gapping_state == 100) { // 0x64
+
+    else if (This->reimuAGappingState == 100)
         velX = 150;
-    }
-    else {
-        // Standard Movement
-        // Manage Hitbox visibility based on focus state
-        if (This->isFocused == 0) {
-            if (This->anmIdFocusedHitbox.id != 0) {
-                // Retrieve VM and kill/hide it
-                AnmVm* vm = AnmManager::getVmWithId(g_anmManager, This->anmIdFocusedHitbox.id);
-                if (vm) AnmManager::setInterruptById(This->anmIdFocusedHitbox.id, 1);
-                This->anmIdFocusedHitbox.id = 0;
-            }
-        }
-        else {
-            if (This->anmIdFocusedHitbox.id == 0) {
-                // Create Hitbox VM (Script 11 in Bullet ANM)
-                AnmId newId;
-                AnmManager::makeVmWithAnmLoaded(g_bulletManager->bulletAnm, 74, 11, &newId);
-                This->anmIdFocusedHitbox.id = newId.id;
-            }
-        }
 
-        // Determine Speed
-        int speed = This->isFocused ? This->focusSpeedSubpixel : This->normalSpeedSubpixel;
-        int diagSpeed = This->isFocused ? This->focusSpeedSubpixelOverSqrt2 : This->normalSpeedSubpixelOverSqrt2;
+    else if (This->isFocused == 0) 
+    {
+        // Unfocused Mode
+        AnmVm* vm = g_anmManager->getVmById(g_anmManager, This->anmIdFocusedHitbox.id);
+        if (vm) {
+            AnmManager::setInterruptById(This->anmIdFocusedHitbox.id, 1);
+        }
+        This->anmIdFocusedHitbox.id = 0;
 
-        // Apply Velocity
         switch (attemptedDirection) {
-        case 1: velY = -speed; break;     // Up
-        case 2: velY = speed; break;     // Down
-        case 3: velX = -speed; break;     // Left
-        case 4: velX = speed; break;     // Right
-        case 5: velX = -diagSpeed; velY = -diagSpeed; break; // UL
-        case 6: velX = diagSpeed; velY = -diagSpeed; break; // UR
-        case 7: velX = -diagSpeed; velY = diagSpeed; break; // DL
-        case 8: velX = diagSpeed; velY = diagSpeed; break; // DR
+        case 1: velY = -This->speedSubpixel; break;
+        case 2: velY = This->speedSubpixel; break;
+        case 3: velX = -This->speedSubpixel; break;
+        case 4: velX = This->speedSubpixel; break;
+        case 5: velX = -This->normalizedSpeedSubpixel; velY = -This->normalizedSpeedSubpixel; break;
+        case 6: velX = This->normalizedSpeedSubpixel; velY = -This->normalizedSpeedSubpixel; break;
+        case 7: velX = -This->normalizedSpeedSubpixel; velY = This->normalizedSpeedSubpixel; break;
+        case 8: velX = This->normalizedSpeedSubpixel; velY = This->normalizedSpeedSubpixel; break;
+        }
+    }
+    else 
+    {
+        // Focused Mode
+        if (This->anmIdFocusedHitbox.id == 0)
+        {
+            AnmId newId;
+            AnmManager::makeVmWithAnmLoaded(g_bulletManager->bulletAnm, 74, 11, &newId);
+            This->anmIdFocusedHitbox.id = newId.id;
+        }
+
+        switch (attemptedDirection)
+        {
+        case 1:
+            velY = -This->focusedSpeedSubpixel;
+            break;
+        case 2:
+            velY = This->focusedSpeedSubpixel;
+            break;
+        case 3:
+            velX = -This->focusedSpeedSubpixel;
+            break;
+        case 4:
+            velX = This->focusedSpeedSubpixel;
+            break;
+        case 5:
+            velX = -This->normalizedFocusedSpeedSubpixel;
+            velY = -This->normalizedFocusedSpeedSubpixel;
+            break;
+        case 6:
+            velX = This->normalizedFocusedSpeedSubpixel;
+            velY = -This->normalizedFocusedSpeedSubpixel;
+            break;
+        case 7:
+            velX = -This->normalizedFocusedSpeedSubpixel;
+            velY = This->normalizedFocusedSpeedSubpixel;
+            break;
+        case 8:
+            velX = This->normalizedFocusedSpeedSubpixel;
+            velY = This->normalizedFocusedSpeedSubpixel;
+            break;
         }
     }
 
     // Sprite Banking Animation
-    int prevVelX = This->attempted_velocity__internal.i0;
+    int prevVelX = This->attemptedVelocityInternal.x;
     int scriptToLoad = -1;
     bool isUnfocusedMode = (This->someFlag & 2) == 0;
 
-    if (isUnfocusedMode) {
-        // Unfocused Scripts: 0=Neutral, 1=ToLeft, 2=FromLeft, 3=ToRight, 4=FromRight
-        if (velX < 0 && prevVelX >= 0) {
-            scriptToLoad = 1; // Start turning Left
-        }
-        else if (velX > 0 && prevVelX <= 0) {
-            scriptToLoad = 3; // Start turning Right
-        }
-        else if (velX == 0) {
-            if (prevVelX < 0) scriptToLoad = 2;      // Return to Neutral from Left
-            else if (prevVelX > 0) scriptToLoad = 4; // Return to Neutral from Right
+    if (isUnfocusedMode)
+    {
+        if (velX < 0 && prevVelX >= 0)
+            scriptToLoad = 1;
+        else if (velX > 0 && prevVelX <= 0)
+            scriptToLoad = 3;
+        else if (velX == 0)
+        {
+            if (prevVelX < 0)
+                scriptToLoad = 2;
+            else if (prevVelX > 0)
+                scriptToLoad = 4;
         }
     }
-    else {
-        // Focused Scripts: 27=ToLeft, 28=FromLeft, 29=ToRight, 30=FromRight
-        if (velX < 0 && prevVelX >= 0) {
+    else
+    {
+        if (velX < 0 && prevVelX >= 0)
             scriptToLoad = 27;
-        }
-        else if (velX > 0 && prevVelX <= 0) {
+        else if (velX > 0 && prevVelX <= 0)
             scriptToLoad = 29;
-        }
-        else if (velX == 0) {
-            if (prevVelX < 0) scriptToLoad = 28;
-            else if (prevVelX > 0) scriptToLoad = 30;
+        else if (velX == 0)
+        {
+            if (prevVelX < 0)
+                scriptToLoad = 28;
+            else if (prevVelX > 0)
+                scriptToLoad = 30;
         }
     }
 
-    // If a transition is needed, load it into the main player VM (vm0)
-    if (scriptToLoad != -1) {
-        AnmVm::loadIntoAnmVm(&This->vm0, This->playerAnmLoaded, scriptToLoad);
-    }
+    if (scriptToLoad != -1)
+        AnmVm::loadIntoAnmVm(&This->vm0, This->playerAnm, scriptToLoad);
 
-    // Store velocities for next frame logic
-    This->attempted_velocity__internal.i0 = velX;
-    This->attempted_velocity__internal.i1 = velY;
+    This->attemptedVelocityInternal.x = velX;
+    This->attemptedVelocityInternal.y = velY;
+    int charType = g_globals.subshot + g_globals.character * 3;
 
-
-    // Reimu C: Speed boost if no shooting/focus for 10 frames
-    if (g_globals.subshot == 2 && g_globals.character == 0) {
-        if ((inputFlags & 9) == 0) { // Bit 0 (Shoot/Z) and Bit 3 (Focus/Shift) are 0
+    // Reimu C Speed Boost Logic
+    if (charType == Character::ReimuC)
+    {
+        // Bit 0 (Shoot) and Bit 3 (Focus) are 0
+        if ((inputFlags & 9) == 0)
+        {
             This->reimuC_FramesWithout_Z_Or_Shift++;
-            if (This->reimuC_FramesWithout_Z_Or_Shift > 10) {
+            if (This->reimuC_FramesWithout_Z_Or_Shift > 10)
+            {
                 velX *= 2;
                 velY *= 2;
-                // Create speed effect
                 AnmId effectId;
-                AnmManager::makeVmWithAnmLoaded(This->playerAnmLoaded, 19, 11, &effectId);
-                AnmVm* effectVm = AnmManager::getVmWithId(g_anmManager, effectId.id);
-                if (effectVm && effectVm->anmLoaded) {
-                    AnmVm::setupTextureQuadAndMatrices(effectVm, This->vm0.spriteNumber, effectVm->anmLoaded);
-                }
-                transformVm(&This->position, effectVm);
+                g_anmManager->makeVmWithAnmLoaded(This->playerAnm, 19, 11, &effectId);
+                AnmVm* effectVm = g_anmManager->getVmById(g_anmManager, effectId.id);
+                if (effectVm && effectVm->m_anmLoaded)
+                    effectVm->setupTextureQuadAndMatrices(effectVm, This->vm0.m_spriteNumber, effectVm->m_anmLoaded);
+                g_anmManager->setVmPosition(effectVm, &This->position);
             }
         }
-        else {
+        else
             This->reimuC_FramesWithout_Z_Or_Shift = 0;
-        }
     }
 
-    // Calculate Delta Position (Float)
-    This->attemptedDeltaPosSubpixel.x = (float)velX * g_gameSpeed;
-    This->attemptedDeltaPosSubpixel.y = (float)velY * g_gameSpeed;
+    // Calculate Subpixel Position Deltas
+    This->attemptedDeltaPosSubpixel.x = static_cast<float>(velX) * g_gameSpeed;
+    This->attemptedDeltaPosSubpixel.y = static_cast<float>(velY) * g_gameSpeed;
 
-    if (attemptedDirection != 0) {
+    if (attemptedDirection != 0)
         This->lastNonzeroAttemptedDeltaPosSubpixel = This->attemptedDeltaPosSubpixel;
-    }
 
-    // Apply Position (Subpixel integer math)
     int moveX = static_cast<int>(This->attemptedDeltaPosSubpixel.x);
     int moveY = static_cast<int>(This->attemptedDeltaPosSubpixel.y);
+    This->attemptedDeltaPosISubpixel.x = moveX;
+    This->attemptedDeltaPosISubpixel.y = moveY;
+    This->posSubpixel.x += moveX;
+    This->posSubpixel.y += moveY;
 
-    This->posSubpixel.i0 += moveX;
-    This->posSubpixel.i1 += moveY;
+    // Character Specific Ticks
+    if (charType == Character::ReimuA)
+        reimuATickGappingState(This);
 
-    // Reimu A: Gap Boundary Logic (Wrap around screen edges)
-    if (This->reimu_a_gapping_state < 99) {
-        int xLimit = 23552; // 0x5c00 (Approx 184.0f * 128)
-
-        if (This->posSubpixel.i0 < -xLimit) {
-            if (This->reimu_a_gapping_state == 0 && g_globals.subshot == 0 && g_globals.character == 0) {
-                This->reimu_a_gapping_state = 1; // Trigger Teleport Left->Right
-                This->reimu_a_frames_in_gapping_state = 0;
-            }
-            This->posSubpixel.i0 = -xLimit;
+    // Reimu B Auto-collect
+    else if (charType == Character::ReimuB)
+    {
+        if (This->attemptedDirection == 0 && (inputFlags & 9) == 0)
+        {
+            This->reimuB_FramesWithoutInput++;
+            if (This->reimuB_FramesWithoutInput > 10)
+                g_itemManager->reimuBAutoCollect();
         }
-        else if (This->posSubpixel.i0 > xLimit) {
-            if (This->reimu_a_gapping_state == 0 && g_globals.subshot == 0 && g_globals.character == 0) {
-                This->reimu_a_gapping_state = 3; // Trigger Teleport Right->Left
-                This->reimu_a_frames_in_gapping_state = 0;
+        else
+            This->reimuB_FramesWithoutInput = 0;
+    }
+
+    // Reimu A Gap Boundaries & Screen Clamp
+    if (This->reimuAGappingState < 99)
+    {
+        if (This->posSubpixel.x < -0x5c00)
+        {
+            if (This->reimuAGappingState == 0 && charType == 0)
+            {
+                This->reimuAGappingState = 1;
+                This->reimuAFramesInGappingState = 0;
             }
-            This->posSubpixel.i0 = xLimit;
+            This->posSubpixel.x = -0x5c00;
+        }
+        else if (This->posSubpixel.x > 0x5c00)
+        {
+            if (This->reimuAGappingState == 0 && charType == 0)
+            {
+                This->reimuAGappingState = 3;
+                This->reimuAFramesInGappingState = 0;
+            }
+            This->posSubpixel.x = 0x5c00;
         }
 
-        // Clamp Y Position
-        if (This->posSubpixel.i1 < 0x1000) This->posSubpixel.i1 = 0x1000;
-        else if (This->posSubpixel.i1 > 0xd800) This->posSubpixel.i1 = 0xd800;
+        if (This->posSubpixel.y < 0x1000) This->posSubpixel.y = 0x1000;
+        else if (This->posSubpixel.y > 0xd800) This->posSubpixel.y = 0xd800;
     }
 
-    // Convert Subpixels to Float for Rendering (1/128 = 0.0078125)
-    This->position.x = (float)This->posSubpixel.i0 * 0.0078125f;
-    This->position.y = (float)This->posSubpixel.i1 * 0.0078125f;
+    // Update Position Floats & Hitbox VM
+    This->position.x = static_cast<float>(This->posSubpixel.x) * 0.0078125f;
+    This->position.y = static_cast<float>(This->posSubpixel.y) * 0.0078125f;
 
-    // Update Hitbox Position
-    AnmVm* hitboxVm = AnmManager::getVmWithId(g_anmManager, This->anmIdFocusedHitbox.id);
-    if (!hitboxVm) {
-        This->anmIdFocusedHitbox.id = 0;
-    }
-    else {
-        Float3 hitboxVec;
-        // The game often adds offsets (like +32+192) to move from game-space to screen-space 
-        hitboxVec.x = This->position.x + 224.0f;
-        hitboxVec.y = This->position.y + 16.0f;
-        hitboxVec.z = This->position.z;
-
-        // Update the VM's position
-        AnmManager::setEntityPositionById(g_anmManager, (int)g_anmManager, &hitboxVec);
+    AnmVm* vm_0x756c = AnmManager::getVmById(g_anmManager, This->vm_id_0x756c.id);
+    if (!vm_0x756c)
+        This->vm_id_0x756c.id = 0;
+    else
+    {
+        Float3 id_0x756c_Vec;
+        id_0x756c_Vec.x = This->position.x + 224.0f; // + 32.0f + 192.0f
+        id_0x756c_Vec.y = This->position.y + 16.0f;
+        id_0x756c_Vec.z = This->position.z;
+        g_anmManager->setVmPositionById(This->vm_id_0x756c.id, &id_0x756c_Vec);
     }
 
-    // TODO: Handle Options and Marisa B specific formation toggles
-    return 0;
+    // Marisa B Formations Update
+    // Assuming UI check skipped / substituted here if missing gui references
+    //FIXME: GUI STUFF
+    if (charType == 4 /* && g_gui->field2_0x4350[0x3a] == 0 */)
+    {
+        if ((g_inputManager.idk3 & 0x400) != 0) { // Typical button release / transition state check
+            This->marisaB_Formation = (This->marisaB_Formation + 1) % 5;
+            
+            if (This->reimu_c_flag_probably_0x7c90 > 0) {
+                for (int i = 0; i < This->reimu_c_flag_probably_0x7c90; ++i) {
+                    // setSomeVmFlagsViaAnmId(This->playerAbilities[i].anotherAnmId.id); (If exported)
+                    This->playerAbilities[i].anotherAnmId.id = 0;
+                    AnmManager::makeVmWithAnmLoaded(This->playerAnm, This->marisaB_Formation + 0x22, 11, &This->playerAbilities[i].anotherAnmId);
+                }
+            }
+        }
+        
+        // Assign the new formation coordinates
+        for (int i = 0; i < 7; ++i)
+        {
+            This->playerAbilities[i].targetOffsetsUnfocused.x = This->playerAbilities[i].marisaBPreferredOffsetsByFormtion[This->marisaB_Formation].x;
+            This->playerAbilities[i].targetOffsetsUnfocused.y = This->playerAbilities[i].marisaBPreferredOffsetsByFormtion[This->marisaB_Formation].y;
+            This->playerAbilities[i].targetOffsetsFocused = This->playerAbilities[i].targetOffsetsUnfocused;
+        }
+    }
+
+    // Player Option / Abilities Smoothing Update Loop
+    if ((This->someFlag & 8) != 0)
+        This->someCounter++;
+
+    for (int i = 0; i < 8; ++i)
+    {
+        PlayerAbility* ability = &This->playerAbilities[i];
+        if (ability->unk0[0] != 0)
+        {
+            if ((This->someFlag & 8) == 0)
+            {
+                Int2* targetOffset = This->isFocused ? &ability->targetOffsetsFocused : &ability->targetOffsetsUnfocused;
+                
+                ability->currentPosSubpixel.x = This->posSubpixel.x + targetOffset->x;
+                ability->currentPosSubpixel.y = This->posSubpixel.y + targetOffset->y;
+
+                if (ability->update != nullptr)
+                    ability->update(ability);
+
+                if (ability->resetFlag == 0) {
+                    int percent = This->percentMovedByOptions;
+                    if (percent > 0x1d) {
+                        int dx = ((ability->currentPosSubpixel.x - ability->previousPosSubpixel.x) * percent) / 100;
+                        int dy = ((ability->currentPosSubpixel.y - ability->previousPosSubpixel.y) * percent) / 100;
+                        
+                        if (dx == 0 && dy == 0) {
+                            ability->previousPosSubpixel = ability->currentPosSubpixel;
+                        } else {
+                            ability->previousPosSubpixel.x += dx;
+                            ability->previousPosSubpixel.y += dy;
+                        }
+                    }
+                }
+                else
+                {
+                    ability->resetFlag = 0;
+                    ability->previousPosSubpixel = ability->currentPosSubpixel;
+                }
+
+                Float3 vec;
+                vec.x = static_cast<float>(ability->previousPosSubpixel.x) * 0.0078125f;
+                vec.y = static_cast<float>(ability->previousPosSubpixel.y) * 0.0078125f;
+                vec.z = 0.0f;
+                g_anmManager->setVmPositionById(ability->anotherAnmId.id, &vec);
+                g_anmManager->setVmPositionById(ability->anmIds[1].id, &vec);
+            }
+            else {
+                ability->currentPosSubpixel = This->posSubpixel;
+                if (This->someCounter >= 0x1e)
+                {
+                    ability->unk0[0] = 0;
+                    
+                    if (ability->anotherAnmId.id != 0)
+                    {
+                        AnmVm* vm = AnmManager::getVmById(g_anmManager, ability->anotherAnmId.id);
+                        if (vm)
+                        {
+                            vm->m_pendingInterrupt = 1;
+                            if (vm->m_familyListNode.prev == nullptr)
+                            {
+                                for (AnmVmListNode* child = vm->m_familyListNode.next; child; child = child->next)
+                                    child->entry->m_pendingInterrupt = 1;
+                            }
+                        }
+                    }
+                    if (ability->anmIds[1].id != 0)
+                    {
+                        AnmVm* vm = AnmManager::getVmById(g_anmManager, ability->anmIds[1].id);
+                        if (vm)
+                        {
+                            vm->m_pendingInterrupt = 1;
+                            if (vm->m_familyListNode.prev == nullptr)
+                            {
+                                for (AnmVmListNode* child = vm->m_familyListNode.next; child; child = child->next)
+                                    child->entry->m_pendingInterrupt = 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
-#endif
 
 void Player::setIframes(int currentTime)
 {
@@ -443,36 +585,26 @@ int Player::useBomb()
 
     g_soundManager.playSoundWithPan(g_player->position.x, 0x26);
 
-    switch (g_globals.character)
+    //switch (g_globals.character)
+    switch (g_globals.subshot + g_globals.character * 3)
     {
-    case CharacterId::Reimu:
-        switch (g_globals.subshot)
-        {
-        case SubshotId::TypeA:
-            g_bomb->startReimuA(g_bomb);
-            break;
-        case SubshotId::TypeB:
-            g_bomb->startReimuB(g_bomb);
-            break;
-        case SubshotId::TypeC:
-            g_bomb->startReimuC(g_bomb);
-            break;
-        }
+    case Character::ReimuA:
+         g_bomb->startReimuA(g_bomb);
         break;
-
-    case CharacterId::Marisa:
-        switch (g_globals.subshot)
-        {
-        case SubshotId::TypeA:
-            g_bomb->startMarisaA(g_bomb);
-            break;
-        case SubshotId::TypeB:
-            g_bomb->startMarisaB(g_bomb);
-            break;
-        case SubshotId::TypeC:
-            g_bomb->startMarisaC(g_bomb);
-            break;
-        }
+    case Character::ReimuB:
+        g_bomb->startReimuB(g_bomb);
+        break;
+    case Character::ReimuC:
+        g_bomb->startReimuC(g_bomb);
+        break;
+    case Character::MarisaA:
+        g_bomb->startMarisaA(g_bomb);
+        break;
+    case Character::MarisaB:
+        g_bomb->startMarisaB(g_bomb);
+        break;
+    case Character::MarisaC:
+        g_bomb->startMarisaC(g_bomb);
         break;
     }
     return 0;
@@ -480,12 +612,40 @@ int Player::useBomb()
 
 int Player::loadShotFile(Player* This, const char* filename)
 {
-    return -1;
+    ShotFile* file = (ShotFile*)openFile(filename, nullptr, 0);
+    This->shotFile = file;
+
+    if (!file)
+        return -1;
+
+    for (int i = 0; i < file->numShooterLists; ++i)
+    {
+        // Convert file offset to absolute memory address
+        uintptr_t fileBaseAddress = reinterpret_cast<uintptr_t>(file);
+
+        file->shooterLists[i].shooters = reinterpret_cast<Shooter*>(
+            reinterpret_cast<uintptr_t>(file->shooterLists[i].shooters) + fileBaseAddress
+        );
+
+        Shooter* currentShooter = file->shooterLists[i].shooters;
+
+        // Process elements until we hit the sentinel value (fireRate < 0)
+        while (currentShooter->fireRate >= 0)
+        {
+            // Resolve the IDs into actual function pointers from the global tables
+            currentShooter->onInit = g_ShooterOnInitCallbacks[currentShooter->onInitId];
+            currentShooter->onTick = g_ShooterOnTickCallbacks[currentShooter->onTickId];
+            currentShooter->onDraw = g_ShooterOnDrawCallbacks[currentShooter->onDrawId];
+            currentShooter->onHit = g_ShooterOnHitCallbacks[currentShooter->onHitId];
+            currentShooter++;
+        }
+    }
+    return 0;
 }
 
 int Player::initialize(Player* This)
 {    
-    const char* playerAnmFileName = g_globals.character == CharacterId::Reimu ? "pl00.anm" : "pl01.anm";
+    const char* playerAnmFileName = g_globals.character == 1 ? "pl00.anm" : "pl01.anm";
     This->playerAnm = g_anmManager->preloadAnm(7, playerAnmFileName);
 
     if (!This->playerAnm)
@@ -583,7 +743,414 @@ int Player::initialize(Player* This)
     This->timer1.set(&This->timer1, 0);
     This->timerIFrames.set(&This->timerIFrames, 120);
 
-    This->reimu_c_related_probably_0x7c90 = 0;
+    //This->reimu_c_related_probably_0x7c90 = 0;
     This->percentMovedByOptions = 0x1e;
     return 0;
+}
+
+int Player::shootingTick(Player* This)
+{
+    if (This->state != 1)
+    {
+        This->idk7 = 0;
+        This->idk8 = 0;
+        return 0;
+    }
+
+    Timer* timer = &This->timer0;
+    if (timer->m_current < 0) {
+        if (This->reimuAGappingState > 98)
+            return 0;
+        //if ((g_inputManager.currentState_ & 1) == 0)
+        //    return 0;
+        Timer::set(&This->timer0, 0);
+    }
+    if (This->timer0.m_current != This->timer0.m_previous)
+        shoot(This, This->timer0.m_current);
+
+    if (0xd < This->timer0.m_current)
+    {
+        // Player is shooting (1 == InputBits::SHOOT)
+        if ((g_inputManager.currentKeysDown & 1) != 0)
+        {
+            timer->addf(timer, -14.0f);
+            return 0;
+        }
+        Timer::set(timer, -1);
+        return 0;
+    }
+    Timer::increment(timer);
+    return 0;
+}
+
+void Player::repopulateAbilities(Player* This)
+{
+    int characterShotType = static_cast<int>(g_globals.subshot) + static_cast<int>(g_globals.character) * 3;
+    int powerLevel = g_globals.currentPower / g_globals.powerPerLevel;
+
+    // Handle Max Power Auras
+    if (g_globals.currentPower >= g_globals.maxPower)
+    {
+        if (powerLevel > 0)
+        {
+            for (int i = 0; i < powerLevel; ++i)
+            {
+                PlayerAbility& ability = This->playerAbilities[i];
+
+                if (ability.anmIds[0].id != 0)
+                {
+                    AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[0].id);
+                    if (vm)
+                    {
+                        vm->m_flagsLow |= 0x4000000;
+                        if (vm->m_familyListNode.prev == nullptr)
+                        {
+                            for (AnmVmListNode* child = vm->m_familyListNode.next; child; child = child->next)
+                                child->entry->m_flagsLow |= 0x4000000;
+                        }
+                    }
+                }
+                ability.anmIds[0].id = 0;
+
+                int scriptIndex = 0;
+                switch (g_globals.character)
+                {
+                case Character::ReimuA:
+                    scriptIndex = 0x17;
+                    break;
+                case Character::ReimuB:
+                    scriptIndex = 0x18;
+                    break;
+                case Character::ReimuC:
+                    scriptIndex = 0x19;
+                    break;
+                case Character::MarisaA:
+                    scriptIndex = 0x28;
+                    break;
+                case Character::MarisaB:
+                    scriptIndex = 0x29;
+                    break;
+                case Character::MarisaC:
+                    scriptIndex = 0x2a;
+                    break;
+                }
+
+                if (scriptIndex != 0)
+                    AnmManager::loadAnmScriptAndAddToList(This->playerAnm, scriptIndex, 11, &ability.anmIds[0]);
+            }
+        }
+    }
+    else
+    {
+        // Not max power
+        for (int i = 0; i < 8; ++i)
+        {
+            PlayerAbility& ability = This->playerAbilities[i];
+            if (ability.anmIds[0].id != 0)
+            {
+                AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[0].id);
+                if (vm)
+                {
+                    vm->m_pendingInterrupt = 1;
+                    if (vm->m_familyListNode.prev == nullptr)
+                    {
+                        for (AnmVmListNode* child = vm->m_familyListNode.next; child; child = child->next)
+                            child->entry->m_pendingInterrupt = 1;
+                    }
+                }
+            }
+            ability.anmIds[0].id = 0;
+        }
+    }
+
+    if (powerLevel <= 0)
+        goto ResetFlags;
+
+    for (int i = 0; i < powerLevel; ++i)
+    {
+        PlayerAbility& ability = This->playerAbilities[i];
+
+        ability.unk0[0] = 2; // Translated from playerOption_int2_64_y[-0x1a] = 2
+
+        // NEED TO VERIFY
+        int dataIndex = g_optionFormationOffsets[characterShotType][powerLevel - 1] + i;
+
+        // Position assignments
+        ability.targetAngleUnfocused = This->shotFile->unfocusedPool.coords[dataIndex].x;
+        ability.targetDistanceUnfocused = This->shotFile->unfocusedPool.coords[dataIndex].y;
+        ability.targetAngleFocused = This->shotFile->focusedPool.coords[dataIndex].x;
+        ability.targetDistanceFocused = This->shotFile->focusedPool.coords[dataIndex].y;
+
+        ability.targetOffsetsUnfocused.x = ability.targetAngleUnfocused * 128.0f;
+        ability.targetOffsetsUnfocused.y = ability.targetDistanceUnfocused * 128.0f;
+
+        ability.targetOffsetsFocused.x = ability.targetAngleFocused * 128.0f;
+        ability.targetOffsetsFocused.y = ability.targetDistanceFocused * 128.0f;
+
+        Int2* targetOffsets = &ability.targetOffsetsFocused;
+        if (This->isFocused == 0) {
+            targetOffsets = &ability.targetOffsetsUnfocused;
+        }
+
+        int targetX = This->posSubpixel.x + targetOffsets->x;
+        int targetY = This->posSubpixel.y + targetOffsets->y;
+
+        ability.currentPosSubpixel.x = targetX;
+        ability.currentPosSubpixel.y = targetY;
+        ability.previousPosSubpixel.x = targetX;
+        ability.previousPosSubpixel.y = targetY;
+
+        ability.optionId = i;
+        ability.anmIds[1].id = 0;
+
+        //switch (g_globals.character)
+        switch (g_globals.subshot + g_globals.character * 3)
+        {
+        case Character::ReimuA:
+            ability.update = optionCallbackReimuA; // 0x433690
+            ability.someAngleFloat = -D3DX_PI / 2;
+            ability.angle = normalizeAngle((i * 2 * D3DX_PI) / (float)powerLevel - D3DX_PI / 2);
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x14, 11, &ability.anotherAnmId);
+            break;
+
+        case Character::ReimuB:
+            ability.update = optionCallbackReimuB; // 0x4337b0
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x15, 11, &ability.anotherAnmId);
+            break;
+
+        case Character::ReimuC:
+            ability.update = optionCallbackReimuC;
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x16, 11, &ability.anotherAnmId);
+            break;
+
+        case Character::MarisaA:
+            ability.update = optionCallbackMarisaA; // 0x433990
+            {
+                int scriptNumber = g_optionFormationOffsets[5][i + powerLevel * 8 + 8] + 0x15;
+                AnmManager::makeVmWithAnmLoaded(This->playerAnm, scriptNumber, 11, &ability.anotherAnmId);
+            }
+            break;
+
+        case Character::MarisaB:
+            // Marisa B pulls from extra coordinate pools to switch between formations
+            ability.marisaBPreferredOffsetsByFormtion[0].x = This->shotFile->unfocusedPool.coords[dataIndex].x * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[0].y = This->shotFile->unfocusedPool.coords[dataIndex].y * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[1].x = This->shotFile->focusedPool.coords[dataIndex].x * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[1].y = This->shotFile->focusedPool.coords[dataIndex].y * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[2].x = This->shotFile->unknownPool1.coords[dataIndex].x * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[2].y = This->shotFile->unknownPool1.coords[dataIndex].y * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[3].x = This->shotFile->unknownPool2.coords[dataIndex].x * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[3].y = This->shotFile->unknownPool2.coords[dataIndex].y * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[4].x = This->shotFile->unknownPool3.coords[dataIndex].x * 128.0f;
+            ability.marisaBPreferredOffsetsByFormtion[4].y = This->shotFile->unknownPool3.coords[dataIndex].y * 128.0f;
+
+            ability.update = optionCallbackMarisaB; // 0x433a50
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, This->marisaB_Formation + 0x22, 11, &ability.anotherAnmId);
+            break;
+
+        case Character::MarisaC:
+            ability.update = optionCallbackMarisaC; // 0x433b20
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x27, 11, &ability.anotherAnmId);
+            break;
+        }
+    }
+
+ResetFlags:
+    This->reimu_c_flag_probably_0x7c90 = powerLevel;
+
+    for (int i = 0; i < 8; ++i) {
+        This->playerAbilities[i].resetFlag = 1;
+    }
+}
+
+void Player::shoot(Player* This, int currentTime)
+{
+}
+
+void Player::optionCallbackReimuA(PlayerAbility* ability)
+{
+    Float2 outVec;
+    float orbitRadius = g_player->isFocused ? 24.0f : 64.0f;
+    decomposeAngle(&outVec, ability->angle,orbitRadius);
+
+    ability->currentPosSubpixel.y = g_player->posSubpixel.x - static_cast<int>(outVec.x * -128.0);
+    ability->previousPosSubpixel.x = g_player->posSubpixel.y - static_cast<int>(outVec.y * -128.0);
+
+    // Rotate the orbs
+    ability->angle = normalizeAngle(ability->angle + 0.10471976);
+
+    int i = ability->currentPosSubpixel.y;
+    if (i < -0x6600)
+    {
+        ability->idk8 |= 1;
+        ability->resetFlag = 1;
+        ability->currentPosSubpixel.y = i + 0xcc00;
+        return;
+    }
+    if (i > 0x6600)
+    {
+        ability->idk8 |= 1;
+        ability->resetFlag = 1;
+        ability->currentPosSubpixel.y = i + -0xcc00;
+        return;
+    }
+    if (ability->idk8 & 1U)
+        ability->resetFlag = 1;
+
+    ability->idk8 = ability->idk8 & 0xfffffffe;
+}
+
+void Player::optionCallbackReimuB(PlayerAbility* ability)
+{
+    
+}
+
+void Player::optionCallbackReimuC(PlayerAbility* ability)
+{
+    
+}
+
+void Player::optionCallbackMarisaA(PlayerAbility* ability)
+{
+    
+}
+
+void Player::optionCallbackMarisaB(PlayerAbility* ability)
+{
+    
+}
+
+void Player::optionCallbackMarisaC(PlayerAbility* ability)
+{
+    
+}
+
+void Player::reimuATickGappingState(Player* This)
+{
+    if (This->reimuAGappingState == 0)
+        return;
+
+    // Guard Condition: Determine if the gap state should be canceled
+    // The state shouldn't be canceled if Reimu is actively teleporting (state 99 or 100)
+    bool shouldCancel = false;
+    if (This->reimuAGappingState <= 98)
+    {
+        bool holdingShootOrFocus = (g_inputManager.currentKeysDown & (InputBits::SHOOT | InputBits::FOCUS)) != 0;
+        bool isDialogActive = (g_gui->playerRelatedValue != 0);
+        bool bossIndicatorMissing = (g_enemyManager != nullptr && g_enemyManager->someIndicator == 0);
+
+        if (holdingShootOrFocus || isDialogActive || bossIndicatorMissing)
+            shouldCancel = true;
+    }
+
+    // Cancel the gap wind-up and reset
+    if (shouldCancel)
+    {
+        This->reimuAGappingState = 0;
+        This->reimuAFramesInGappingState = 0;
+        ++This->reimuAFramesInGappingState;
+        return;
+    }
+
+    // State Machine
+    switch (This->reimuAGappingState)
+    {
+        // Left Gap Windup
+        case 1:
+            if (This->attemptedDirection == 0) // Neutral input
+            {
+                This->reimuAFramesInGappingState = 0;
+                This->reimuAGappingState = 2;
+            }
+            else if (This->attemptedDirection != 3) // 3 = Left
+                This->reimuAGappingState = 0;
+            break;
+
+        case 2:
+            if (This->reimuAFramesInGappingState < 9)
+            {
+                // Must double-tap left (3) within 9 frames
+                if (This->attemptedDirection == 3 && g_gui->playerRelatedValue == 0 &&
+                    g_enemyManager != nullptr && g_enemyManager->someIndicator != 0) {
+                    
+                    This->reimuAGappingState = 99; // Transition to active Left Gap
+                    This->reimuAFramesInGappingState = 0;
+                    SoundManager::playSoundCentered(SoundId::SOUND_47);
+                    repopulateAbilities(This);
+                }
+                break;
+            }
+            // Timeout: Fallthrough to reset if > 9 frames
+            This->reimuAGappingState = 0;
+            This->reimuAFramesInGappingState = 0;
+            break;
+
+        // Right Gap Windup
+        case 3:
+            if (This->attemptedDirection == 0) { // Neutral input
+                This->reimuAFramesInGappingState = 0;
+                This->reimuAGappingState = 4;
+            } else if (This->attemptedDirection != 4) { // 4 = Right
+                This->reimuAGappingState = 0;
+            }
+            break;
+
+        case 4:
+            if (This->reimuAFramesInGappingState < 9)
+            {
+                // Must double-tap right (4) within 9 frames
+                if (This->attemptedDirection == 4 && !g_gui->playerRelatedValue && 
+                    g_enemyManager && g_enemyManager->someIndicator)
+                {
+                    
+                    This->reimuAGappingState = 100; // Transition to active Right Gap
+                    This->reimuAFramesInGappingState = 0;
+                    SoundManager::playSoundCentered(SoundId::REIMU_A_GAP);
+                    repopulateAbilities(This);
+                }
+                break;
+            }
+            // Timeout: Fallthrough to reset if > 9 frames
+            This->reimuAGappingState = 0;
+            This->reimuAFramesInGappingState = 0;
+            break;
+
+        // Active gap state (Left)
+        case 99:
+
+            if (This->posSubpixel.x < -0x67FF)
+            {
+                This->posSubpixel.x += 0xD000; 
+                for (int i = 0; i < 8; ++i)
+                    This->playerAbilities[i].resetFlag = 1;
+            }
+            
+            // State lasts for 45 frames
+            if (This->reimuAFramesInGappingState >= 45)
+            {
+                This->reimuAGappingState = 0;
+                This->reimuAFramesInGappingState = 0;
+            }
+            break;
+
+        // Active gap state (Right)
+        case 100:
+            if (This->posSubpixel.x > 0x67FF)
+            {
+                This->posSubpixel.x -= 0xD000;
+                for (int i = 0; i < 8; ++i)
+                    This->playerAbilities[i].resetFlag = 1;
+            }
+            
+            if (This->reimuAFramesInGappingState >= 45)
+            {
+                This->reimuAGappingState = 0;
+                This->reimuAFramesInGappingState = 0;
+            }
+            break;
+
+        default:
+            break;
+    }
+    ++This->reimuAFramesInGappingState;
 }
