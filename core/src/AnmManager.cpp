@@ -76,18 +76,18 @@ AnmManager* AnmManager::initialize(AnmManager* This)
 
 AnmManager::~AnmManager()
 {
-    AnmVmList* primaryHead = m_primaryGlobalNext;
+    AnmVmListNode* primaryHead = m_primaryGlobalHead;
     while (primaryHead)
     {
-        AnmVmList* primaryNext = primaryHead->next;
+        AnmVmListNode* primaryNext = primaryHead->next;
         removeVm(this, primaryHead->entry);
         primaryHead = primaryNext;
     }
 
-    AnmVmList* secondaryHead = m_secondaryGlobalNext;
+    AnmVmListNode* secondaryHead = m_secondaryGlobalHead;
     while (secondaryHead)
     {
-        AnmVmList* secondaryNext = secondaryHead->next;
+        AnmVmListNode* secondaryNext = secondaryHead->next;
         removeVm(this, secondaryHead->entry);
         secondaryHead = secondaryNext;
     }
@@ -99,18 +99,18 @@ AnmManager::~AnmManager()
 
 void AnmManager::removeVm(AnmManager* This, AnmVm* vm)
 {
-    AnmVmList* node = &vm->m_nodeInGlobalList;
-    if (This->m_primaryGlobalPrev == node)
-        This->m_primaryGlobalPrev = node->prev;
+    AnmVmListNode* node = &vm->m_globalListNode;
+    if (This->m_primaryGlobalTail == node)
+        This->m_primaryGlobalTail = node->prev;
 
-    if (This->m_primaryGlobalNext == node)
-        This->m_primaryGlobalNext = node->next;
+    if (This->m_primaryGlobalHead == node)
+        This->m_primaryGlobalHead = node->next;
 
-    if (This->m_secondaryGlobalPrev == node)
-        This->m_secondaryGlobalPrev = node->prev;
+    if (This->m_secondaryGlobalTail == node)
+        This->m_secondaryGlobalTail = node->prev;
 
-    if (This->m_secondaryGlobalNext == node)
-        This->m_secondaryGlobalNext = node->next;
+    if (This->m_secondaryGlobalHead == node)
+        This->m_secondaryGlobalHead = node->next;
 
     if (node->next)
         node->next->prev = node->prev;
@@ -121,7 +121,7 @@ void AnmManager::removeVm(AnmManager* This, AnmVm* vm)
     node->next = nullptr;
     node->prev = nullptr;
 
-    AnmVmList* familyNode = &vm->m_nodeAsFamilyMember;
+    AnmVmListNode* familyNode = &vm->m_familyListNode;
 
     if (familyNode->next)
         familyNode->next->prev = familyNode->prev;
@@ -156,6 +156,39 @@ void AnmManager::removeVm(AnmManager* This, AnmVm* vm)
         vm->m_specialRenderData = nullptr;
         game_free(vm);
     }
+}
+
+void AnmManager::addVm(AnmVm* vm, AnmId* outAnmId)
+{
+    AnmVmListNode* newNode = &vm->m_globalListNode;
+    newNode->entry = vm;
+    vm->m_globalListNode.next = nullptr;
+    vm->m_globalListNode.prev = nullptr;
+
+    AnmVmListNode* globalHead = g_anmManager->m_primaryGlobalHead;
+    if (!globalHead)
+        g_anmManager->m_primaryGlobalTail = newNode;
+    else
+    {
+        // Dead code because of inlining
+        //AnmVmListNode* globalNext = vm->m_globalListNode.next;
+        //if (globalNext)
+        //{
+        //    globalHead->next = globalNext;
+        //    ((vm->m_globalListNode).next)->prev = globalHead;
+        //}
+        vm->m_globalListNode.next = globalHead;
+        globalHead->prev = newNode;
+    }
+    g_anmManager->m_primaryGlobalHead = newNode;
+
+    // 1-indexed?
+    ++g_anmManager->m_id;
+    if (g_anmManager->m_id == 0)
+        ++g_anmManager->m_id;
+
+    vm->m_id.id = g_anmManager->m_id;
+    outAnmId->id = g_anmManager->m_id;
 }
 
 AnmLoaded* AnmManager::preloadAnm(int anmSlotIndex, const char* anmFileName)
@@ -316,7 +349,6 @@ AnmLoaded* AnmManager::preloadAnmFromMemory(AnmManager* This, int anmSlotIndex, 
         nextOffset = currentChunk->nextOffset;
     }
 
-    // Allocate buffers for chunk data, keyframes, and sprites
     anmLoaded->m_numAnmLoadedD3Ds = processedCount;
 
     anmLoaded->m_anmLoadedD3D = (AnmLoadedD3D*)game_malloc(processedCount * sizeof(AnmLoadedD3D));
@@ -357,19 +389,19 @@ AnmLoaded* AnmManager::preloadAnmFromMemory(AnmManager* This, int anmSlotIndex, 
 
 void AnmManager::markAnmLoadedAsReleasedInVmList(AnmManager* This, AnmLoaded* anmLoaded)
 {
-    AnmVmList* temp = This->m_primaryGlobalNext;
+    AnmVmListNode* temp = This->m_primaryGlobalHead;
     while (temp)
     {
-        AnmVmList* next = temp->next;
+        AnmVmListNode* next = temp->next;
         AnmVm* entry = temp->entry;
         temp = next;
         if (entry->m_anmLoaded == anmLoaded)
             entry->m_flagsLow |= 0x4000000;
     }
-    temp = This->m_secondaryGlobalNext;
+    temp = This->m_secondaryGlobalHead;
     while (temp)
     {
-        AnmVmList* next = temp->next;
+        AnmVmListNode* next = temp->next;
         AnmVm* entry = temp->entry;
         temp = next;
         if (entry->m_anmLoaded == anmLoaded)
@@ -388,7 +420,7 @@ AnmVm* AnmManager::allocateVm()
         index = This->getNextFastVmIndex(index);
         This->m_nextFastVmIndex = index;
 
-        // Check 2: Is the next slot also alive?
+        // Is the next slot also alive?
         if (This->m_fastVmsIsAlive[index] != 0)
         {
             // Both preferred slots are busy. Allocate an overflow VM from the heap.
@@ -403,8 +435,6 @@ AnmVm* AnmManager::allocateVm()
             vm->m_spriteNumber = -1; // Inlined constructor
             AnmVm::initialize(vm);
 
-            // Even though we allocated from the heap, the assembly behavior 
-            // advances the pool cursor before returning.
             This->m_nextFastVmIndex = This->getNextFastVmIndex(This->m_nextFastVmIndex);
 
             return vm;
@@ -437,7 +467,7 @@ void AnmManager::releaseTextures()
     {
         AnmLoaded* anmLoaded = This->m_loadedAnms[i];
         if (anmLoaded == nullptr)
-            continue; // Skip null entries
+            continue;
 
         AnmLoadedD3D* anmLoadedD3Ds = anmLoaded->m_anmLoadedD3D;
         int m_numAnmLoadedD3Ds = anmLoaded->m_numAnmLoadedD3Ds;
@@ -477,14 +507,11 @@ void AnmManager::flushSprites(AnmManager* This)
 // 0x454ec0
 void AnmManager::blitTextureToSurface(AnmManager* This, BlitParams* blitParams)
 {
-    // Early return if the texture is null
     if (!This->m_loadedAnms[blitParams->anmLoadedIndex]->m_anmLoadedD3D[blitParams->anmLoadedD3dIndex].m_texture)
         return;
 
-    // Ensure pending sprite operations are completed
     flushSprites(This);
 
-    // Retrieve the back buffer from the Direct3D device
     IDirect3DSurface9* backBuffer = nullptr;
     HRESULT hr = g_supervisor.d3dDevice->GetBackBuffer(
         0,
@@ -495,11 +522,9 @@ void AnmManager::blitTextureToSurface(AnmManager* This, BlitParams* blitParams)
     if (FAILED(hr))
         return;
 
-    // Access the texture from the AnmLoadedD3D array
     AnmLoadedD3D* anmLoadedD3d = This->m_loadedAnms[blitParams->anmLoadedIndex]->m_anmLoadedD3D;
     IDirect3DTexture9* texture = anmLoadedD3d[blitParams->anmLoadedD3dIndex].m_texture;
 
-    // Get the surface from the texture (level 0)
     IDirect3DSurface9* textureSurface = nullptr;
     hr = texture->GetSurfaceLevel(0, &textureSurface);
     if (FAILED(hr))
@@ -508,21 +533,18 @@ void AnmManager::blitTextureToSurface(AnmManager* This, BlitParams* blitParams)
         return;
     }
 
-    // Set up source rectangle (assuming r1.right and r1.bottom are width and height)
     RECT srcRect{};
     srcRect.left = blitParams->srcRect.left;
     srcRect.top = blitParams->srcRect.top;
     srcRect.right = blitParams->srcRect.left + blitParams->srcRect.right;
     srcRect.bottom = blitParams->srcRect.top + blitParams->srcRect.bottom;
 
-    // Set up destination rectangle (assuming r2.right and r2.bottom are width and height)
     RECT dstRect{};
     dstRect.left = blitParams->destRect.left;
     dstRect.top = blitParams->destRect.top;
     dstRect.right = blitParams->destRect.left + blitParams->destRect.right;
     dstRect.bottom = blitParams->destRect.top + blitParams->destRect.bottom;
 
-    // Copy the region from the back buffer to the texture surface
     hr = D3DXLoadSurfaceFromSurface(
         textureSurface,
         nullptr,
@@ -532,13 +554,11 @@ void AnmManager::blitTextureToSurface(AnmManager* This, BlitParams* blitParams)
         &srcRect,
         2,
         0
-    ); // Filter and color key values preserved from original
+    );
 
-    // If the copy succeeded, mark the texture as dirty
     if (SUCCEEDED(hr))
         texture->AddDirtyRect(nullptr);
 
-    // Release resources
     textureSurface->Release();
     backBuffer->Release();
 }
@@ -1203,12 +1223,12 @@ int AnmManager::drawVmTriangleFan(AnmManager* This, AnmVm* vm, SpecialRenderData
 }
 
 // 0x4561e0
-AnmVm* AnmManager::getVmWithId(AnmManager* This, int anmId)
+AnmVm* AnmManager::getVmById(AnmManager* This, int anmId)
 {
     if (anmId == 0)
         return nullptr;
 
-    AnmVmList* primaryVmList = This->m_primaryGlobalNext;
+    AnmVmListNode* primaryVmList = This->m_primaryGlobalHead;
     while (primaryVmList)
     {
         if (primaryVmList->entry->m_id.id == anmId)
@@ -1216,7 +1236,7 @@ AnmVm* AnmManager::getVmWithId(AnmManager* This, int anmId)
         primaryVmList = primaryVmList->next;
     }
 
-    AnmVmList* secondaryVmList = This->m_secondaryGlobalNext;
+    AnmVmListNode* secondaryVmList = This->m_secondaryGlobalHead;
     while (secondaryVmList)
     {
         if (secondaryVmList->entry->m_id.id == anmId)
@@ -1254,25 +1274,25 @@ void AnmManager::loadIntoAnmVm(AnmVm* vm, AnmLoaded* anmLoaded, int scriptNumber
 void AnmManager::putInVmList(AnmVm* vm, AnmId* anmId)
 {
     AnmManager* This = g_anmManager;
-    AnmVmList* curVm = &vm->m_nodeInGlobalList;
+    AnmVmListNode* curVm = &vm->m_globalListNode;
     curVm->entry = vm;
-    vm->m_nodeInGlobalList.next = nullptr;
-    vm->m_nodeInGlobalList.prev = nullptr;
-    if (This->m_primaryGlobalNext == nullptr)
-        This->m_primaryGlobalNext = curVm;
+    vm->m_globalListNode.next = nullptr;
+    vm->m_globalListNode.prev = nullptr;
+    if (This->m_primaryGlobalHead == nullptr)
+        This->m_primaryGlobalHead = curVm;
 
     else
     {
-        AnmVmList* primaryVms = This->m_primaryGlobalPrev;
+        AnmVmListNode* primaryVms = This->m_primaryGlobalTail;
         if (primaryVms->next != nullptr)
         {
-            (vm->m_nodeInGlobalList).next = primaryVms->next;
+            (vm->m_globalListNode).next = primaryVms->next;
             primaryVms->next->prev = curVm;
         }
         primaryVms->next = curVm;
-        vm->m_nodeInGlobalList.prev = primaryVms;
+        vm->m_globalListNode.prev = primaryVms;
     }
-    This->m_primaryGlobalPrev = curVm;
+    This->m_primaryGlobalTail = curVm;
 
     // Strange but correct game logic
     ++This->m_id;
@@ -1300,6 +1320,16 @@ void AnmManager::spawnVmAtPosition(AnmLoaded* anmLoaded,AnmId* anmId, int script
     g_supervisor.leaveCriticalSection(9);
 }
 
+void AnmManager::loadAnmScriptAndAddToList(AnmLoaded* anmLoaded, uint32_t scriptNumber, int layer, AnmId* outAnmId)
+{
+    g_supervisor.enterCriticalSection(9);
+    AnmVm* vm = allocateVm();
+    vm->m_flagsLow |= 0x40000000;
+    vm->m_layer = layer;
+    vm->loadAnmScript(vm, anmLoaded, scriptNumber);
+    addVm(vm, outAnmId);
+    g_supervisor.leaveCriticalSection(9);
+}
 
 // 0x4549e0
 void AnmManager::releaseAnmLoaded(AnmManager* This, AnmLoaded* anmLoaded)
@@ -1527,6 +1557,78 @@ int AnmManager::drawVmWithTextureTransform(AnmManager* This, AnmVm* vm)
     return -1;
 }
 
+void AnmManager::drawRect(AnmVm* vm, Rect3D* rect3d)
+{
+    switch (vm->m_flagsLow >> 0x16 & 0xf)
+    {
+    case 0:
+        vm->writeSpriteCharactersWithoutRot(vm, &rect3d->bottomLeft, &rect3d->bottomRight, &rect3d->topRight, &rect3d->topLeft);
+        break;
+    case 1:
+        vm->applyZRotationToQuadCorners(vm, &rect3d->bottomLeft, &rect3d->bottomRight, &rect3d->topRight, &rect3d->topLeft);
+        break;
+    case 2:
+    case 3:
+        vm->writeSpriteCharacters(vm, &rect3d->bottomLeft, &rect3d->bottomRight, &rect3d->topRight, &rect3d->topLeft);
+        break;
+    }
+}
+
+void AnmManager::setInterruptById(int vmId, uint16_t pendingInterruptFlag)
+{
+    AnmVm* vm = getVmById(g_anmManager, vmId);
+    AnmVmListNode* vmList = vm->m_familyListNode.prev; // VERIFY
+    vm->m_pendingInterrupt = pendingInterruptFlag;
+    if (vm && vmList == nullptr) // ??
+    {
+        for (vmList = (vm->m_familyListNode).next; vmList != nullptr; vmList = vmList->next)
+            vmList->entry->m_pendingInterrupt = pendingInterruptFlag;
+    }
+}
+
+
+void AnmManager::setVmPosition(AnmVm* vm, Float3* position)
+{
+    vm->m_entityPos.x = position->x + 32.0 + 192.0;
+    vm->m_entityPos.y = position->y + 16.0;
+    vm->m_entityPos.z = position->z;
+
+    AnmVmListNode* node = vm->m_familyListNode.prev;
+    if (!node)
+    {
+        node = vm->m_familyListNode.next;
+        while (node)
+        {
+            AnmVm* entry = node->entry;
+            node = node->next;
+            entry->m_entityPos.x = position->x + 32.0 + 192.0;
+            entry->m_entityPos.y = position->y + 16.0;
+            entry->m_entityPos.z = position->z;
+        }
+    }
+}
+
+void AnmManager::setVmPositionById(int anmId, Float3* position)
+{
+    AnmVm* vm = getVmById(g_anmManager, anmId);
+    if (!vm)
+        return;
+
+    AnmVmListNode* node = vm->m_familyListNode.prev;
+    if (!node)
+    {
+        node = vm->m_familyListNode.next;
+        while (node)
+        {
+            AnmVm* entry = node->entry;
+            node = node->next;
+            entry->m_entityPos.x = position->x + 32.0 + 192.0;
+            entry->m_entityPos.y = position->y + 16.0;
+            entry->m_entityPos.z = position->z;
+        }
+    }
+}
+
 void AnmManager::drawVm(AnmManager* This, AnmVm* vm)
 {
     uint8_t alpha = (vm->m_color0 >> 24) & 0xff;
@@ -1540,7 +1642,7 @@ void AnmManager::drawVm(AnmManager* This, AnmVm* vm)
     {
     case 0:
     {
-        vm->writeSpriteCharactersWithoutRot(vm, &g_renderQuad144[0], &g_renderQuad144[1], &g_renderQuad144[2], &g_renderQuad144[3]);
+        vm->writeSpriteCharactersWithoutRot(vm, &g_renderQuad144[0].pos, &g_renderQuad144[1].pos, &g_renderQuad144[2].pos, &g_renderQuad144[3].pos);
         drawVmSprite2D(This, 1, vm);
         break;
     }
@@ -1548,19 +1650,19 @@ void AnmManager::drawVm(AnmManager* This, AnmVm* vm)
     {
         if (vm->m_rotation.z == 0.0)
         {
-            vm->writeSpriteCharactersWithoutRot(vm, &g_renderQuad144[0], &g_renderQuad144[1], &g_renderQuad144[2], &g_renderQuad144[3]);
+            vm->writeSpriteCharactersWithoutRot(vm, &g_renderQuad144[0].pos, &g_renderQuad144[1].pos, &g_renderQuad144[2].pos, &g_renderQuad144[3].pos);
             drawVmSprite2D(This, 1, vm);
         }
         else
         {
-            vm->applyZRotationToQuadCorners(vm, &g_renderQuad144[0], &g_renderQuad144[1], &g_renderQuad144[2], &g_renderQuad144[3]);
+            vm->applyZRotationToQuadCorners(vm, &g_renderQuad144[0].pos, &g_renderQuad144[1].pos, &g_renderQuad144[2].pos, &g_renderQuad144[3].pos);
             drawVmSprite2D(This, 0, vm);
         }
         break;
     }
     case 2:
     {
-        vm->writeSpriteCharacters(vm, &g_renderQuad144[0], &g_renderQuad144[1], &g_renderQuad144[2], &g_renderQuad144[3]);
+        vm->writeSpriteCharacters(vm, &g_renderQuad144[0].pos, &g_renderQuad144[1].pos, &g_renderQuad144[2].pos, &g_renderQuad144[3].pos);
         drawVmSprite2D(This, 0, vm);
         break;
     }
@@ -1568,12 +1670,12 @@ void AnmManager::drawVm(AnmManager* This, AnmVm* vm)
     {
         if (vm->m_rotation.z == 0.0)
         {
-            vm->writeSpriteCharacters(vm, &g_renderQuad144[0], &g_renderQuad144[1], &g_renderQuad144[2], &g_renderQuad144[3]);
+            vm->writeSpriteCharacters(vm, &g_renderQuad144[0].pos, &g_renderQuad144[1].pos, &g_renderQuad144[2].pos, &g_renderQuad144[3].pos);
             drawVmSprite2D(This, 0, vm);
         }
         else
         {
-            vm->applyZRotationToQuadCorners(vm, &g_renderQuad144[0], &g_renderQuad144[1], &g_renderQuad144[2], &g_renderQuad144[3]);
+            vm->applyZRotationToQuadCorners(vm, &g_renderQuad144[0].pos, &g_renderQuad144[1].pos, &g_renderQuad144[2].pos, &g_renderQuad144[3].pos);
             drawVmSprite2D(This, 0, vm);
         }
         break;
@@ -1603,11 +1705,12 @@ void AnmManager::drawVm(AnmManager* This, AnmVm* vm)
     case 8:
     {
 #if 0
+        //puts("mode8\n");
         using ltoFunc = Signature<int, AnmManager*, AnmVm*>;
         using ltoSig = Storage<
-            Returns<RegCode::EAX>,   // Return      -> EAX
-            Stack<0x4>,              // AnmManager* -> Stack[0x4]
-            EBX                      // AnmVm*      -> EBX
+            EAX,         // Return      -> EAX (If void, use Void)
+            Stack<0x4>,  // AnmManager* -> Stack[0x4]
+            EBX          // AnmVm*      -> EBX
         >;
         static auto game_drawVmWithTextureTransform = createCustomCallingConvention<ltoSig, ltoFunc>(0x4513a0);
         game_drawVmWithTextureTransform(This, vm);
@@ -1680,7 +1783,7 @@ ChainCallbackResult AnmManager::onTick1a(void* args)
     AnmManager* This = reinterpret_cast<AnmManager*>(args);
     int vmLayer;
     AnmVm* vmLayers[33]{};
-    AnmVmList* list;
+    AnmVmListNode* list;
     AnmVm* vm;
 
     g_supervisor.enterCriticalSection(9);
@@ -1694,7 +1797,7 @@ ChainCallbackResult AnmManager::onTick1a(void* args)
         vm = vm + 1;
     } while (vmLayer < 0x1d);
 
-    list = This->m_primaryGlobalNext;
+    list = This->m_primaryGlobalHead;
     while (list)
     {
         vm = list->entry;
@@ -1729,14 +1832,14 @@ ChainCallbackResult AnmManager::onTick08(void* args)
     AnmManager* This = reinterpret_cast<AnmManager*>(args);
     void* onTickFunction;
     AnmVm* vmLayers;
-    AnmVmList* list;
+    AnmVmListNode* list;
     AnmVm* vm;
 
     g_supervisor.enterCriticalSection(9);
 
     This->m_vmLayers[0x1d].m_nextInLayerList = nullptr;
     This->m_vmLayers[0x1e].m_nextInLayerList = nullptr;
-    list = This->m_secondaryGlobalNext;
+    list = This->m_secondaryGlobalHead;
     This->m_someTickCounter = 0;
     while (list)
     {

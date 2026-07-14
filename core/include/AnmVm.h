@@ -1,5 +1,6 @@
 #pragma once
 #include "AnmId.h"
+#include "AnmInstruction.h"
 #include "AnmVmList.h"
 #include "RenderVertex.h"
 #include "Timer.h"
@@ -10,6 +11,8 @@
 #include "Chain.h"
 #include "Vectors.h"
 #include "Rng.h"
+#include <bit>
+#include <type_traits>
 
 struct AnmLoaded;
 struct DistortionMesh;
@@ -25,21 +28,12 @@ struct SpecialRenderData
     float uvScrollSpeedV;         // 0x4A8
 };
 
-struct AnmRawInstruction
-{
-    int16_t opcode;
-    int16_t offsetToNextInstr;
-    short time;
-    uint16_t varMask;
-    int args[10];
-};
-
 class AnmVm
 {
 public:
     AnmId m_id;                                              // <0x0>
-    AnmVmList m_nodeInGlobalList;                            // <0x4>
-    AnmVmList m_nodeAsFamilyMember;                          // <0x10>
+    AnmVmListNode m_globalListNode;                          // <0x4>
+    AnmVmListNode m_familyListNode;                          // <0x10>
     AnmVm* m_nextInLayerList;                                // <0x1c>
     int m_layer;                                             // <0x20>
     Float3 m_rotation;                                       // <0x24>
@@ -59,7 +53,7 @@ public:
     Interp<int> m_alpha2Interp;                              // <0x228>
     Interp<float> m_uVelInterp;                              // <0x254>
     Interp<float> m_vVelInterp;                              // <0x280>
-    Float2 m_uvScrollVel;                               // <0x2ac>
+    Float2 m_uvScrollVel;                                    // <0x2ac>
     D3DXMATRIX m_baseScaleMatrix;                            // <0x2b4>
     D3DXMATRIX m_localTransformMatrix;                       // <0x2f4>
     D3DXMATRIX m_textureMatrix;                              // <0x334>
@@ -116,10 +110,10 @@ public:
      */
     static void applyZRotationToQuadCorners(
         AnmVm* This,
-        RenderVertex144* bottomLeft,
-        RenderVertex144* bottomRight,
-        RenderVertex144* topLeft,
-        RenderVertex144* topRight
+        Float3* bottomLeft,
+        Float3* bottomRight,
+        Float3* topLeft,
+        Float3* topRight
     );
 
     /**
@@ -133,18 +127,18 @@ public:
      */
     static void writeSpriteCharacters(
         AnmVm* This,
-        RenderVertex144* bottomLeft,
-        RenderVertex144* bottomRight,
-        RenderVertex144* topRight,
-        RenderVertex144* topLeft
+        Float3* bottomLeft,
+        Float3* bottomRight,
+        Float3* topRight,
+        Float3* topLeft
     );
 
     static void writeSpriteCharactersWithoutRot(
         AnmVm* This,
-        RenderVertex144* bottomLeft,
-        RenderVertex144* bottomRight,
-        RenderVertex144* topRight,
-        RenderVertex144* topLeft
+        Float3* bottomLeft,
+        Float3* bottomRight,
+        Float3* topRight,
+        Float3* topLeft
     );
 
     //static void onDrawRenderMesh();
@@ -159,7 +153,7 @@ public:
     static int projectQuadCornersThroughCameraViewport(AnmVm* This);
 
     static float wrapAngleSum(float f1, float f2);
-
+    static float randScale(float f, RngContext* ctx);
     static void inlineAsmFsincos(RenderVertex144* This, float theta, float scale);
     static int onTick(AnmVm* This);
     static int getIntVar(AnmVm* This, int id);
@@ -186,9 +180,39 @@ private:
 
     inline void jumpToInstruction(int address)
     {
-        m_currentInstruction = reinterpret_cast<AnmRawInstruction*>(
-            reinterpret_cast<char*>(m_beginningOfScript) + address
-        );
+        m_currentInstruction = reinterpret_cast<AnmRawInstruction*>(reinterpret_cast<char*>(m_beginningOfScript) + address);
+    }
+
+    inline int getIntArg(uint8_t argNumber)
+    {
+        int x = m_currentInstruction->args[argNumber];
+        if ((m_currentInstruction->varMask & (1 << argNumber)) == 0)
+            x = getIntVar(this, x);
+        return x;
+    }
+
+    inline int* getIntPtrArg(uint8_t argNumber)
+    {
+        int* x = reinterpret_cast<int*>(&m_currentInstruction->args[argNumber]);
+        if ((m_currentInstruction->varMask & (1 << argNumber)) == 0)
+            x = getIntVarPtr(this, x);
+        return x;
+    }
+
+    inline float getFloatArg(uint8_t argNumber)
+    {
+        float x = std::bit_cast<float>(m_currentInstruction->args[argNumber]);
+        if ((m_currentInstruction->varMask & (1 << argNumber)) == 0)
+            x = getFloatVar(this, x);
+        return x;
+    }
+
+    inline float* getFloatPtrArg(uint8_t argNumber)
+    {
+        float* x = reinterpret_cast<float*>(&m_currentInstruction->args[argNumber]);
+        if ((m_currentInstruction->varMask & (1 << argNumber)) == 0)
+            x = getFloatVarPtr(this, x);
+        return x;
     }
 };
 ASSERT_SIZE(AnmVm, 0x434);

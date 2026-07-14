@@ -25,6 +25,14 @@ struct AnmVertexBuffers
 };
 ASSERT_SIZE(AnmVertexBuffers, 0x38000c);
 
+struct Rect3D
+{
+    Float3 bottomLeft;
+    Float3 bottomRight;
+    Float3 topRight;
+    Float3 topLeft;
+};
+
 class AnmManager
 {
 public:
@@ -57,10 +65,10 @@ public:
     IDirect3DVertexBuffer9* m_squareVertexBuffer;  // <0x4355cc>
     RenderVertexSq m_squareVertices[4];            // <0x4355d0>
     AnmVertexBuffers m_anmVertexBuffers;           // <0x435620>
-    AnmVmList* m_primaryGlobalNext;                // <0x7b562c>
-    AnmVmList* m_primaryGlobalPrev;                // <0x7b5630>
-    AnmVmList* m_secondaryGlobalNext;              // <0x7b5634>
-    AnmVmList* m_secondaryGlobalPrev;              // <0x7b5638>
+    AnmVmListNode* m_primaryGlobalHead;            // <0x7b562c>
+    AnmVmListNode* m_primaryGlobalTail;            // <0x7b5630>
+    AnmVmListNode* m_secondaryGlobalHead;          // <0x7b5634>
+    AnmVmListNode* m_secondaryGlobalTail;          // <0x7b5638>
     AnmVm m_vmLayers[31];                          // <0x7b563c>
     int m_id;                                      // <0x7bd888>
     uint8_t m_scaleB;                              // <0x7bd88c>
@@ -185,7 +193,7 @@ public:
     // 0x455a00
     static void makeVmWithAnmLoaded(AnmLoaded* anmLoaded, int scriptNumber, int anmVmLayer, AnmId* anmId);
     static void removeVm(AnmManager* This, AnmVm* vm);
-
+    static void addVm(AnmVm* vm, AnmId* anmId);
     static void createD3DTextures(AnmManager* This);
     static void markAnmLoadedAsReleasedInVmList(AnmManager* This, AnmLoaded* anmLoaded);
     static void releaseTextures();
@@ -196,22 +204,24 @@ public:
     static void putInVmList(AnmVm* vm, AnmId* anmId);
     static void releaseAnmLoaded(AnmManager* This, AnmLoaded* anmLoaded);
     
+    static void drawRect(AnmVm* vm, Rect3D* rect3d);
     static int drawVmTriangleStrip(AnmManager* This, AnmVm* vm, SpecialRenderData* specialRenderData, uint32_t vertexCount);
     static int drawVmTriangleFan(AnmManager* This, AnmVm* vm, SpecialRenderData* specialRenderData, uint32_t vertexCount);
+
+    static void setInterruptById(int vmId, uint16_t pendingInterruptFlag);
 
     /**
      * 0x4569c0
      * @brief Finds and returns a fast vm (preallocated) or allocates a new one if no space is available
      */
     static AnmVm* allocateVm();
-
     static AnmManager* initialize(AnmManager* This);
-
-    static AnmVm* getVmWithId(AnmManager* This, int anmId);
-
+    static AnmVm* getVmById(AnmManager* This, int anmId);
     static void blitTextures(AnmManager* This);
-
     static void spawnVmAtPosition(AnmLoaded* anmLoaded, AnmId* anmId, int scriptNumber, int layer, Float3* spawnLocation);
+    static void setVmPosition(AnmVm* vm, Float3* position);
+    static void setVmPositionById(int id, Float3* position);
+    static void loadAnmScriptAndAddToList(AnmLoaded* anmLoaded, uint32_t scriptNumber, int layer, AnmId* outAnmId);
 
     static ChainCallbackResult renderLayer(AnmManager* This, int layer);
 

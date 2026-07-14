@@ -1,9 +1,9 @@
 #pragma once
 
 class AnmVm;
-struct AnmVmList
+struct AnmVmListNode
 {
     AnmVm* entry;
-    AnmVmList* next;
-    AnmVmList* prev;
+    AnmVmListNode* next;
+    AnmVmListNode* prev;
 };
