@@ -43,17 +43,19 @@ Use this when you have written a C++ reimplementation and want to hook the origi
 // Helper: createLtoThunk<Storage...>(void* targetFunction, int retPopSize)
 // Usage: Hooking AnmManager::preloadAnmFromMemory
 installHook(0x454190, createLtoThunk<
-    Returns<RegCode::EAX>,  // Map return value to EAX
+    EAX,                    // Map return value to EAX
     Stack<0x4>,             // 1st arg is at ESP+0x4
     Stack<0x8>,             // 2nd arg is at ESP+0x8
     ECX                     // 3rd arg is passed in ECX
 >(AnmManager::preloadAnmFromMemory, 0x8)); // Caller expects Ret 0x8 stack cleanup
 
+// For functions returning `void`, replace the first template argument with `Void`:
+installHook(0x44fd10, createLtoThunk<Void, ESI>(AnmManager::flushSprites, 0));
 ```
 
 ### 2. Calling Game Functions (`createCustomCallingConvention`)
 
-Use this when you need to call a specific address in the game (e.g., drawing a specific VM) that uses a custom LTO convention. This creates a function pointer you can invoke from C++.
+Use this when you need to call a specific address in the game (e.g., drawing a specific VM) that uses a custom LTO convention. This creates a function pointer you can invoke from C++. For `void`, simply do as above.
 
 ```cpp
 // Define the C++ signature
@@ -61,7 +63,7 @@ using ltoFunc = Signature<int, AnmManager*, AnmVm*>;
 
 // Define the Assembly storage map
 using ltoSig = Storage<
-    Returns<RegCode::EAX>,   // Return      -> EAX
+    EAX,                     // Return      -> EAX
     Stack<0x4>,              // AnmManager* -> Stack[0x4]
     EBX                      // AnmVm* -> EBX
 >;
