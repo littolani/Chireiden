@@ -197,415 +197,340 @@ BOOL CALLBACK chooseResolutionDialog(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM
     return FALSE;
 }
 
+int checkJoystickAvailability(void)
+{
+    MMRESULT joystickStatus;
+    joyinfoex_tag joystickInfo;
+
+    joystickInfo.dwSize = 0x34;
+    joystickInfo.dwFlags = 0xff;
+    joystickStatus = joyGetPosEx(0, &joystickInfo);
+    if (joystickStatus != 0) {
+        joystickStatus = joyGetPosEx(1, &joystickInfo);
+        if (joystickStatus != 0) {
+            printf("使えるパッドが存在しないようです、残念\n");
+            return 1;
+        }
+    }
+    joyGetDevCapsA(0, &g_joyCaps, 0x194);
+    return 0;
+}
+
+void normalizeKeyboardState(void)
+{
+    int keyIndex;
+    byte keyboardState[256];
+
+    GetKeyboardState(keyboardState);
+    keyIndex = 0;
+    do {
+        keyboardState[keyIndex] = keyboardState[keyIndex] & 0x7f;
+        keyIndex = keyIndex + 1;
+    } while (keyIndex < 256);
+    SetKeyboardState(keyboardState);
+}
+
+
 // 0x445510
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    #if 0
-    int launchInfo;
-    int initStatus;
-    int result3;
-    int result4;
-    AnmManager* anmManagerBuf;
-    int cursor_status_2;
-    int res;
-    int hr_;
-    HRESULT hr;
-    uint32_t windowHeight;
-    int system_metrics;
-    int windowHeight1;
-    int cursorStatus;
-    int cursor_status_3;
-    int cursor_status_1;
-    BOOL isMessageAvailable;
-    int check_cookie_result;
-    int i;
-    HRESULT result;
-    DWORD idk;
-    int windowHeight2;
-    LPCRITICAL_SECTION critical_section;
-    D3DPRESENT_PARAMETERS* pDVar1;
-    int message_loop_counter;
-    void* d3dFormat; // code*
-    uint32_t* puVar2;
-    D3DFORMAT d3dformat;
-    float time;
-    int someWindowProcessedFlag;
-    tagMSG tagMsg;
-    BYTE keyboardBuffer[16];
-    byte bStack_100;
-    uint32_t local_c;
-    int window_count;
-    Chain* chain;
-    IDirect3DDevice9** ppReturnedDeviceInterface;
-    AnmManager* anmManager;
-    ChainElem** calcChainNextElem;
-
-    someWindowProcessedFlag = 0;
     g_window.hInstance = hInstance;
-
     timeBeginPeriod(1);
 
     g_supervisor.flags |= 0x8000;
     for (int i = 0; i < 12; ++i)
+    {
         InitializeCriticalSection(&g_supervisor.criticalSections[i]);
+    }
 
     puts("---------- Touhou 11 Startup Log ----------\n");
 
-    g_app = CreateMutexA(NULL, 1, "Touhou 11 App");
+    g_app = CreateMutexA(NULL, TRUE, "Touhou 11 App");
     if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        MessageBoxA(
-            NULL,
-            "Another instance of the game is already running",
-            "Error",
-            MB_OK | MB_ICONERROR
-        );
+        MessageBoxA(NULL, "二つは起動できません\n", "エラー", MB_OK | MB_ICONERROR);
+        goto AppCleanup;
     }
-    else
+
+    if (getLaunchInfo() == -1)
+        goto AppCleanup;
+
+    g_supervisor.hInstance = hInstance;
+    g_window.retrieveSystemStats();
+
+    if (g_supervisor.verifyGameConfig() == 0)
     {
-        launchInfo = getLaunchInfo();
-        if (launchInfo != -1)
+        BYTE keyboardBuffer[256];
+        GetKeyboardState(keyboardBuffer);
+
+        // Show config dialog if configured to do so, or if Left Ctrl (0x10) is pressed?
+        if ((g_supervisor.m_gameConfig.flags & 0x100) != 0 || (keyboardBuffer[VK_LCONTROL] & 0x80) != 0)
+            DialogBoxParamA(hInstance, (LPCSTR)0xCB, NULL, chooseResolutionDialog, 0);
+
+        if ((g_window.someFlag2 & WND_FLAG_DIALOG_MASK) == 0)
+            g_window.someFlag2 ^= ((g_supervisor.m_gameConfig.displayMode * 4) ^ g_window.someFlag2) & 0xC;
+    }
+
+RestartEngine:
+    while (true)
+    {
+        g_soundManager.someState = 2;
+        g_soundManager.close();
+        g_soundManager.releaseSounds();
+
+        if (g_anmManager)
         {
-            g_supervisor.hInstance = hInstance;
-            g_window.retrieveSystemStats();
-            if (g_supervisor.verifyGameConfig() == 0)
+            g_anmManager->~AnmManager();
+            game_free(g_anmManager);
+            g_anmManager = nullptr;
+        }
+
+        if (g_supervisor.surfaceR0) { g_supervisor.surfaceR0->Release(); g_supervisor.surfaceR0 = nullptr; }
+        if (g_supervisor.surfaceR1) { g_supervisor.surfaceR1->Release(); g_supervisor.surfaceR1 = nullptr; }
+        if (g_supervisor.backBuffer) { g_supervisor.backBuffer->Release(); g_supervisor.backBuffer = nullptr; }
+        if (g_supervisor.d3dDevice) { g_supervisor.d3dDevice->Release(); g_supervisor.d3dDevice = nullptr; }
+        if (g_supervisor.d3dInterface0) { g_supervisor.d3dInterface0->Release(); g_supervisor.d3dInterface0 = nullptr; }
+
+        if (g_window.hwnd)
+        {
+            ShowWindow(g_window.hwnd, SW_HIDE);
+            MoveWindow(g_window.hwnd, 0, 0, 0, 0, 0);
+            DestroyWindow(g_window.hwnd);
+            g_window.hwnd = nullptr;
+        }
+
+        while (ShowCursor(TRUE) < 0);
+
+        // Exit check
+        if (g_window.timeForCleanup != 2)
+        {
+            writeToFile("th11.cfg", sizeof(GameConfig), &g_supervisor.m_gameConfig);
+            timeEndPeriod(1);
+
+            g_supervisor.flags &= ~0x8000;
+            for (int i = 0; i < 12; ++i)
+                DeleteCriticalSection(&g_supervisor.criticalSections[i]);
+
+            SystemParametersInfoA(SPI_SETSCREENSAVEACTIVE, g_window.screenSaveActive, NULL, SPIF_SENDCHANGE);
+            SystemParametersInfoA(SPI_SETLOWPOWERACTIVE, g_window.lowerPowerActive, NULL, SPIF_SENDCHANGE);
+            SystemParametersInfoA(SPI_SETPOWEROFFACTIVE, g_window.powerOffActive, NULL, SPIF_SENDCHANGE);
+            WINNLSEnableIME(NULL, TRUE);
+            return 0;
+        }
+
+        puts("再起動を要するオプションが変更されたので再起動します\n");
+
+        if (!g_supervisor.m_d3dPresetParameters.Windowed)
+            WINNLSEnableIME(NULL, TRUE);
+
+        // Flush message queue before restart
+        tagMSG msg;
+        for (int i = 0; i < 60; ++i)
+        {
+            if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
             {
-                GetKeyboardState(keyboardBuffer);
-                if (((g_supervisor.m_gameConfig.flags & 0x100) != 0) || ((bStack_100 & 0x80) != 0))
-                {
-                    DialogBoxParamA(hInstance, (LPCSTR)0xcb, NULL, chooseResolutionDialog, 0);
-                }
-                if ((g_window.someFlag2 & 0x60) == 0)
-                {
-                    g_window.someFlag2 ^= ((uint32_t)g_supervisor.m_gameConfig.displayMode * 4 ^ g_window.someFlag2) & 0xc;
-                    // g_supervisor.calculateSelfChecksum(); Never used anyways
-                    // d3dFormat = (code*)0x0;
-                    goto InitChain;
-                }
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
             }
         }
-    }
-    do {
-        do {
-            do {
-                while (true)
+        g_supervisor.flags &= ~0x180;
+
+        // Allocation and Init
+        void* chainMem = game_new(sizeof(Chain));
+        g_chain = chainMem ? new (chainMem) Chain() : nullptr;
+
+        checkJoystickAvailability();
+        normalizeKeyboardState();
+
+        g_supervisor.flags &= ~0xC00;
+        Supervisor::initializeInputDevices(&g_supervisor);
+
+        uint32_t ioFlags = g_supervisor.flags ^ ((uint32_t)(g_supervisor.keyboard) << 10 ^ g_supervisor.flags) & 0x400;
+        g_supervisor.flags = ioFlags ^ ((uint32_t)(g_supervisor.joystick) << 11 ^ ioFlags) & 0x800;
+
+        g_supervisor.d3dInterface0 = Direct3DCreate9(D3D_SDK_VERSION);
+        if (!g_supervisor.d3dInterface0)
+        {
+            puts("Direct3D オブジェクトは何故か作成出来なかった\r\n");
+            break;
+        }
+
+        if (!g_window.initialize(hInstance))
+            break;
+
+        g_soundManager.createThread(g_window.hwnd);
+
+        if (g_supervisor.initD3d9Devices(D3DFMT_UNKNOWN) != 0)
+            continue;
+
+        void* anmMem = game_malloc(sizeof(AnmManager));
+        if (!anmMem)
+        {
+            printf("Failed to allocate AnmManager!\n");
+            exit(1);
+        }
+        g_anmManager = AnmManager::initialize((AnmManager*)anmMem);
+
+        if (!g_supervisor.m_d3dPresetParameters.Windowed)
+        {
+            WINNLSEnableIME(NULL, FALSE);
+            while (ShowCursor(FALSE) >= 0);
+            SetCursor(NULL);
+        }
+
+        g_window.someDouble = 0.0;
+        g_window.frameDeltaTime = g_window.getDeltaTime();
+        g_window.frameSkipDeltaTime = g_window.frameDeltaTime;
+        g_window.predictedDeltaTime = g_window.frameDeltaTime;
+        g_window.timeSinceLastFrame = g_window.getDeltaTime();
+        g_window.deltaTime = g_window.timeSinceLastFrame;
+
+        SetForegroundWindow(g_window.hwnd);
+        g_supervisor.initialize();
+
+        g_window.someFlag2 |= 1;
+        g_window.timeForCleanup = 0;
+        g_window.frameskipCounter = -4;
+
+    GameLoop:
+        while (true)
+        {
+            if (g_window.timeForCleanup != 0)
+                goto EngineCleanup;
+
+            if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessageA(&msg);
+                continue;
+            }
+
+            HRESULT hr = g_supervisor.d3dDevice->TestCooperativeLevel();
+            if (SUCCEEDED(hr))
+            {
+                if ((g_window.someFlag2 & 2) == 0)
                 {
-                    g_soundManager.someState = 2;
-                    FN_waitAndCloseGlobalHandles();
-                    releaseSounds();
-
-                    if (g_anmManager)
+                    if ((g_window.someFlag2 & 0x10) == 0)
                     {
-                        g_anmManager->~AnmManager();
-                        free(anmManager);
-                    }
-
-                    g_anmManager = nullptr;
-                    if (g_supervisor.surfaceR0 != nullptr)
-                    {
-                        g_supervisor.surfaceR0->Release();
-                        g_supervisor.surfaceR0 = nullptr;
-                    }
-
-                    if (g_supervisor.surfaceR1 != nullptr)
-                    {
-                        g_supervisor.surfaceR1->Release();
-                        g_supervisor.surfaceR1 = nullptr;
-                    }
-
-                    if (g_supervisor.backBuffer != nullptr)
-                    {
-                        g_supervisor.backBuffer->Release();
-                        g_supervisor.backBuffer = nullptr;
-                    }
-
-                    if (g_supervisor.d3dDevice != nullptr)
-                    {
-                        g_supervisor.d3dDevice->Release();
-                        g_supervisor.d3dDevice = nullptr;
-                    }
-
-                    if (g_supervisor.d3dInterface0 != nullptr)
-                    {
-                        g_supervisor.d3dInterface0->Release();
-                        g_supervisor.d3dInterface0 = nullptr;
-                    }
-
-                    if (g_window.hwnd)
-                    {
-                        ShowWindow(g_window.hwnd, 0);
-                        MoveWindow(g_window.hwnd, 0, 0, 0, 0, 0);
-                        DestroyWindow(g_window.hwnd);
-                        g_window.hwnd = nullptr;
-                    }
-
-                    do {
-                        cursor_status_1 = ShowCursor(1);
-                    } while (cursor_status_1 < 0);
-
-                    if (someWindowProcessedFlag != 2)
-                    {
-                        writeToFile("th11.cfg", 0x3c, &g_supervisor.m_gameConfig);
-                        timeEndPeriod(1);
-
-                        g_supervisor.flags = g_supervisor.flags & 0xffff7fff;
-                        for (int i = 0; i < 12; ++i)
-                            DeleteCriticalSection(&g_supervisor.criticalSections[i]);
-
-                        SystemParametersInfoA(0x11, g_window.primaryScreenWorkingArea, (PVOID)0x0, 2);
-                        SystemParametersInfoA(0x55, g_window.mouseSpeed, (PVOID)0x0, 2);
-                        SystemParametersInfoA(0x56, g_window.idk1, (PVOID)0x0, 2);
-                        WINNLSEnableIME(0, 1);
-                        return 0;
-                    }
-                    puts("再起動を要するオプションが変更されたので再起動します\n");
-
-                    if (g_supervisor.m_d3dPresetParameters.Windowed == 0)
-                        WINNLSEnableIME(0, 1);
-                   
-                    d3dFormat = PeekMessageA_exref;
-                    message_loop_counter = 0x3c;
-                    do {
-                        isMessageAvailable = PeekMessageA(&tagMsg, (HWND)0x0, 0, 0, 1);
-                        if (isMessageAvailable != 0) {
-                            TranslateMessage(&tagMsg);
-                            DispatchMessageA(&tagMsg);
+                        if (g_supervisor.m_d3dPresetParameters.PresentationInterval == 1 && g_supervisor.m_gameConfig.frameSkip == 0) {
+                            // Window::frameIdkWhatVariationThisIs(&g_window);
                         }
-                        message_loop_counter = message_loop_counter + -1;
-                    } while (message_loop_counter != 0);
-                    g_supervisor.flags = g_supervisor.flags & 0xfffffe7f;
-                InitChain:
-                    g_chain = (Chain*)game_new(0x4c);
-                    if (g_chain == (Chain*)0x0) {
-                        g_chain = (Chain*)0x0;
+                        else {
+                            // Window::frameFrameskip(&g_window);
+                        }
+                    }
+                    else
+                        Window::frame(&g_window);
+
+                    if (g_window.timeForCleanup != 0)
+                        break;
+
+                    g_supervisor.flags &= ~0x10;
+                    continue;
+                }
+            }
+            else if (hr != D3DERR_DEVICENOTRESET)
+            {
+                continue;
+            }
+
+            // Device Reset Handling
+            g_window.idk2 = 10;
+            if ((g_window.someFlag2 & 2) != 0)
+            {
+                if ((g_window.someFlag2 & 0xC) == 0)
+                {
+                    GetWindowRect(g_window.hwnd, &g_supervisor.windowDimensions);
+                    g_supervisor.m_d3dPresetParameters.PresentationInterval = ((g_window.someFlag2 & 0x10) ? 0 : D3DPRESENT_INTERVAL_ONE);
+                    g_supervisor.m_d3dPresetParameters.FullScreen_RefreshRateInHz = 60;
+                    g_supervisor.m_d3dPresetParameters.Windowed = FALSE;
+                    g_supervisor.m_d3dPresetParameters.BackBufferFormat = (g_supervisor.m_gameConfig.colorDepth != 0) ? D3DFMT_X8R8G8B8 : D3DFMT_R5G6B5;
+                }
+                else
+                {
+                    g_supervisor.m_d3dPresetParameters.FullScreen_RefreshRateInHz = 0;
+                    g_supervisor.m_d3dPresetParameters.PresentationInterval = (g_window.someFlag2 & 0x10) ? D3DPRESENT_INTERVAL_IMMEDIATE : D3DPRESENT_INTERVAL_ONE;
+                    g_supervisor.m_d3dPresetParameters.Windowed = TRUE;
+                }
+            }
+
+            g_supervisor.releaseSurfaces();
+            g_anmManager->releaseTextures();
+
+            hr = g_supervisor.d3dDevice->Reset(&g_supervisor.m_d3dPresetParameters);
+            if (SUCCEEDED(hr))
+            {
+                g_supervisor.resetRenderState();
+                g_anmManager->createD3DTextures(g_anmManager);
+                g_supervisor.flags |= 0x10;
+                g_supervisor.idk7[3] = 3;
+
+                if ((g_window.someFlag2 & 2) != 0)
+                {
+                    uint32_t displayMode = (g_window.someFlag2 >> 2) & 3;
+                    if (displayMode == 0)
+                    {
+                        SetWindowLongA(g_window.hwnd, GWL_STYLE, WS_POPUP);
+                        SetWindowPos(g_window.hwnd, HWND_TOP, 0, 0, 640, 480, SWP_FRAMECHANGED);
+                        WINNLSEnableIME(NULL, FALSE);
+                        while (ShowCursor(FALSE) >= 0);
+                        SetCursor(NULL);
+                        g_window.isAppUnfocused = 0;
                     }
                     else
                     {
-                        // inlined constructor
-                        g_chain->calcChain.trackerPrevNode = nullptr;
-                        g_chain->calcChain.registerChainCallback = nullptr;
-                        g_chain->calcChain.runCalcChainCallback = nullptr;
-                        g_chain->calcChain.jobPriority = 0;
-                        g_chain->calcChain.nextNode = (ChainElem*)((uintptr_t)g_chain->calcChain.nextNode & ~1);
-                        g_chain->calcChain.embeddedTracker.trackerJobNode = &g_chain->calcChain;
-                        g_chain->calcChain.embeddedTracker.trackerNextNode = nullptr;
-                        g_chain->calcChain.embeddedTracker.trackerPrevNode = nullptr;
-
-                        g_chain->drawChain.nextNode = (ChainElem*)((uintptr_t)g_chain->drawChain.nextNode & ~1);
-                        g_chain->drawChain.trackerPrevNode = nullptr;
-                        g_chain->drawChain.registerChainCallback = nullptr;
-                        g_chain->drawChain.runCalcChainCallback = nullptr;
-                        g_chain->drawChain.jobPriority = 0;
-                        g_chain->drawChain.embeddedTracker.trackerJobNode = &g_chain->drawChain;
-                        g_chain->drawChain.embeddedTracker.trackerNextNode = nullptr;
-                        g_chain->drawChain.embeddedTracker.trackerPrevNode = nullptr;
-                        g_chain->timeToRemove = 0;
-                    }
-                    checkJoystickAvailability();
-                    normalizeKeyboardState();
-                    g_supervisor.flags = g_supervisor.flags & 0xfffff3ff;
-                    Supervisor::initializeInputDevices(&g_supervisor);
-                    windowHeight = g_supervisor.flags ^
-                        ((uint)(g_supervisor.keyboard != (IDirectInputDevice8*)0x0) << 10 ^
-                            g_supervisor.flags) & 0x400;
-                    g_supervisor.flags =
-                        windowHeight ^
-                        ((uint)(g_supervisor.joystick != (IDirectInputDevice8*)0x0) << 0xb ^ windowHeight) &
-                        0x800;
-                    /* idek
-                       no one seems to use this thing anyways */
-                    // ThreadInf::closeThread((ThreadInf*)&g_loadingThread);
-                    g_supervisor.d3dInterface0 = Direct3DCreate9(0x20);
-                    if (g_supervisor.d3dInterface0 != (IDirect3D9*)0x0) break;
-                    puts("Direct3D オブジェクトは何故か作成出来なかった\r\n");
-                }
-                result3 = Window::initialize(hInstance);
-            } while (result3 != 0);
-            // SoundManager::createThread(g_window.hwnd);
-            // result4 = Supervisor::initD3d9Devices((D3DFORMAT)d3dFormat);
-        } while (result4 != 0);
-
-        anmManagerBuf = (AnmManager*)game_malloc(0x7bd894);
-        if (anmManagerBuf == (AnmManager*)0x0) {
-            g_anmManager = (AnmManager*)0x0;
-        }
-        else {
-            g_anmManager = AnmManager::initialize(anmManagerBuf);
-        }
-        if (g_supervisor.m_d3dPresetParameters.Windowed == 0) {
-            WINNLSEnableIME(0, 0);
-            do {
-                cursor_status_2 = ShowCursor(0);
-            } while (-1 < cursor_status_2);
-            SetCursor((HCURSOR)0x0);
-        }
-        g_window.someDouble = 0.0;
-        g_window.frameDeltaTime = Window::getDeltaTime();
-        g_window.frameSkipDeltaTime = g_window.frameDeltaTime;
-        g_window.predictedDeltaTime = g_window.frameDeltaTime;
-        g_window.timeSinceLastFrame = Window::getDeltaTime();
-        g_window.deltaTime = g_window.timeSinceLastFrame;
-        res = SetForegroundWindow(g_window.hwnd);
-        // Supervisor::initialize();
-        if (res == 0) {
-            g_window.someFlag2 = g_window.someFlag2 | 1;
-            someWindowProcessedFlag = 0;
-            g_window.frameskipCounter = -4;
-        joined_r0x0044581d:
-            do {
-                while (true)
-                {
-                    if (g_window.timeForCleanup != 0)
-                        goto Cleanup;
-                    isMessageAvailable = PeekMessageA(&tagMsg, (HWND)0x0, 0, 0, 1);
-                    if (isMessageAvailable == 0) break;
-                    TranslateMessage(&tagMsg);
-                    DispatchMessageA(&tagMsg);
-                }
-                hr_ = g_supervisor.d3dDevice->TestCooperativeLevel();
-                if (hr_ == 0) {
-                    if ((g_window.someFlag2 & 2) == 0) {
-                        if ((g_window.someFlag2 & 0x10) == 0) {
-                            if ((g_supervisor.m_d3dPresetParameters.PresentationInterval == 1) &&
-                                (g_supervisor.m_gameConfig.frameSkip == '\0')) {
-                                // hr_ = Window::frameIdkWhatVariationThisIs(&g_window);
-                            }
-                            else {
-                                // hr_ = Window::frameFrameskip(&g_window);
-                            }
+                        int width, height;
+                        if (displayMode == 3) {
+                            width = GetSystemMetrics(SM_CXFIXEDFRAME) * 2 + 1280;
+                            height = GetSystemMetrics(SM_CYFIXEDFRAME) * 2 + 960;
+                        }
+                        else if (displayMode == 2) {
+                            width = GetSystemMetrics(SM_CXFIXEDFRAME) * 2 + 960;
+                            height = GetSystemMetrics(SM_CYFIXEDFRAME) * 2 + 720;
                         }
                         else {
-                            Window::frame(&g_window);
+                            width = GetSystemMetrics(SM_CXFIXEDFRAME) * 2 + 640;
+                            height = GetSystemMetrics(SM_CYFIXEDFRAME) * 2 + 480;
                         }
-                        someWindowProcessedFlag = hr_;
-                        if (hr_ != 0) break;
-                        g_supervisor.flags &= 0xffffffef;
-                        goto joined_r0x0044581d;
-                    }
-                }
-                else if (hr_ != -0x7789f797)
-                    goto joined_r0x0044581d;
-                g_window.idk2 = 10;
-                if ((g_window.someFlag2 & 2) != 0) {
-                    if ((g_window.someFlag2 & 0xc) == 0) {
-                        GetWindowRect(g_window.hwnd, &g_supervisor.windowDimensions);
-                        pDVar1 = &g_supervisor.m_d3dPresetParameters;
-                        puVar2 = g_supervisor.idk3;
-                        for (i = 0xe; i != 0; i = i + -1) {
-                            *puVar2 = pDVar1->BackBufferWidth;
-                            pDVar1 = (D3DPRESENT_PARAMETERS*)&pDVar1->BackBufferHeight;
-                            puVar2 = puVar2 + 1;
-                        }
-                        g_supervisor.m_d3dPresetParameters.PresentationInterval =
-                            (-(uint)((g_window.someFlag2 & 0x10) != 0) & 0x7fffffff) + 1;
-                        g_supervisor.m_d3dPresetParameters.FullScreen_RefreshRateInHz = 0x3c;
-                        g_supervisor.m_d3dPresetParameters.Windowed = 0;
-                        g_supervisor.m_d3dPresetParameters.BackBufferFormat =
-                            (uint)(g_supervisor.m_gameConfig.colorDepth != '\0') + D3DFMT_X8R8G8B8;
-                    }
-                    else {
-                        // g_supervisor.m_d3dPresetParameters.BackBufferFormat =
-                        //     g_supervisor.d3dPresentBackBuferFormat;
-                        g_supervisor.m_d3dPresetParameters.FullScreen_RefreshRateInHz = 0;
-                        if ((g_window.someFlag2 & 0x10) == 0) {
-                            g_supervisor.m_d3dPresetParameters.PresentationInterval =
-                                (-(uint)(g_supervisor.d3dPresentationIntervalFlag != 0x3c) & 0x7fffffff) + 1;
-                        }
-                        else {
-                            g_supervisor.m_d3dPresetParameters.PresentationInterval = 0x80000000;
-                        }
-                        g_supervisor.m_d3dPresetParameters.Windowed = 1;
-                    }
-                }
-                g_supervisor.releaseSurfaces();
-                g_anmManager->releaseTextures();
-                hr = g_supervisor.d3dDevice->Reset(&g_supervisor.m_d3dPresetParameters);
+                        int captionHeight = GetSystemMetrics(SM_CYCAPTION);
 
-                if (SUCCEEDED(hr))
-                {
-                    g_supervisor.resetRenderState();
-                    g_anmManager->createD3DTextures(g_anmManager);
-                    g_supervisor.flags = g_supervisor.flags | 0x10;
-                    g_supervisor.idk7[3] = 3;
-                    if ((g_window.someFlag2 & 2) != 0)
-                    {
-                        windowHeight = g_window.someFlag2 >> 2 & 3;
-                        if (windowHeight == 0)
-                        {
-                            SetWindowLongA(g_window.hwnd, -0x10, -0x70000000);
-                            SetWindowPos(g_window.hwnd, (HWND)0x0, 0, 0, 0x280, 0x1e0, 0x20);
-                            WINNLSEnableIME(0, 0);
-                            do {
-                                cursor_status_3 = ShowCursor(0);
-                            } while (-1 < cursor_status_3);
-                            SetCursor((HCURSOR)0x0);
-                            g_window.isAppUnfocused = 0;
-                        }
-                        else {
-                            if (windowHeight == 3) {
-                                system_metrics = GetSystemMetrics(7);
-                                d3dformat = system_metrics * 2 + 0x500;
-                                windowHeight2 = GetSystemMetrics(8);
-                                windowHeight2 = windowHeight2 * 2 + 0x3c0;
-                            }
-                            else if (windowHeight == 2) {
-                                windowHeight2 = GetSystemMetrics(7);
-                                d3dformat = windowHeight2 * 2 + 0x3c0;
-                                windowHeight2 = GetSystemMetrics(8);
-                                windowHeight2 = windowHeight2 * 2 + 0x2d0;
-                            }
-                            else {
-                                windowHeight2 = GetSystemMetrics(7);
-                                d3dformat = windowHeight2 * 2 + 0x280;
-                                windowHeight2 = GetSystemMetrics(8);
-                                windowHeight2 = windowHeight2 * 2 + 0x1e0;
-                            }
-                            windowHeight1 = GetSystemMetrics(4);
-                            SetWindowLongA(g_window.hwnd, -0x10, 0x10cb0000);
-                            SetWindowPos(g_window.hwnd, (HWND)0x0, g_supervisor.windowDimensions.left,
-                                g_supervisor.windowDimensions.top, d3dformat, windowHeight1 + windowHeight2
-                                , 0x60);
-                            ShowWindow(g_window.hwnd, 1);
-                            WINNLSEnableIME(0, 1);
-                            do {
-                                cursorStatus = ShowCursor(1);
-                            } while (cursorStatus < 0);
-                        }
+                        SetWindowLongA(g_window.hwnd, GWL_STYLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
+                        SetWindowPos(
+                            g_window.hwnd, HWND_TOP,
+                            g_supervisor.windowDimensions.left, g_supervisor.windowDimensions.top,
+                            width, height + captionHeight,
+                            SWP_FRAMECHANGED | SWP_SHOWWINDOW
+                        );
+
+                        ShowWindow(g_window.hwnd, SW_SHOW);
+                        WINNLSEnableIME(NULL, TRUE);
+                        while (ShowCursor(TRUE) < 0);
                     }
-                    Supervisor::setupCameras(&g_supervisor);
-                    g_window.someFlag2 = g_window.someFlag2 & 0xfffffffd;
-                    goto joined_r0x0044581d;
                 }
-            } while (hr == -0x7789f798);
-        }
-        else {
-            someWindowProcessedFlag = res;
-            if (res != -1) {
-                someWindowProcessedFlag = 2;
+                g_supervisor.setupCameras(&g_supervisor);
+                g_window.someFlag2 &= ~2; // Clear device lost flag
             }
         }
-    Cleanup:
-        g_supervisor.m_gameConfig.displayMode = (byte)(g_window.someFlag2 >> 2) & 3;
-        if ((g_window.someFlag2 >> 2 & 3) != 0)
+
+    EngineCleanup:
+        g_supervisor.m_gameConfig.displayMode = (g_window.someFlag2 >> 2) & 3;
+        if (g_supervisor.m_gameConfig.displayMode != 0)
         {
             GetWindowRect(g_window.hwnd, &g_supervisor.windowDimensions);
             g_supervisor.m_gameConfig.windowPosX = g_supervisor.windowDimensions.left;
             g_supervisor.m_gameConfig.windowPosY = g_supervisor.windowDimensions.top;
         }
 
-        //TODO: Implement
-        static auto supervisor_cleanup = createCustomCallingConvention<Signature<Supervisor*>, Storage<EBX>>(0x429650);
-        supervisor_cleanup(&g_supervisor);
-        //g_supervisor.cleanup(&g_supervisor);
-
-        chain = g_chain;
         if (g_chain)
         {
-            Supervisor::releaseChains();
-            game_free(chain);
+            Supervisor::releaseChains(); // or g_chain->release();
+            game_free(g_chain);
+            g_chain = nullptr;
         }
-        g_chain = nullptr;
-    } while (true);
-    #endif
+
+        goto RestartEngine;
+    }
+
+AppCleanup:
     return 0;
 }
