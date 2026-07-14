@@ -16,8 +16,8 @@ struct Globals
     int u2;
     int u3;
     Timer timer;
-    CharacterId character;
-    SubshotId subshot;
+    int character;
+    int subshot;
     int currentLives;
     int currentLifeFragments;
     int difficulty;
@@ -75,6 +75,8 @@ byte* openFile(const char* filename, size_t* outSize, BOOL isExternalResource);
 float normalizeAngle(float inputAngleRadians);
 
 // 0x459aa0
+void decomposeAngle(Float2* outVec, float angle, float scale);
+
 void decomposeAngle(Float3* outVec, float angle, float scale);
 
 extern const char* g_shotFiles[];

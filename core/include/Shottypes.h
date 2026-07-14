@@ -1,15 +1,12 @@
 #pragma once
 #include <cstdint>
 
-enum class CharacterId : uint32_t
+enum Character
 {
-    Reimu = 0,
-    Marisa = 1
-};
-
-enum class SubshotId : uint32_t
-{
-    TypeA = 0,
-    TypeB = 1,
-    TypeC = 2
+    ReimuA = 0,
+    ReimuB = 1,
+    ReimuC = 2,
+    MarisaA = 3,
+    MarisaB = 4,
+    MarisaC = 5
 };

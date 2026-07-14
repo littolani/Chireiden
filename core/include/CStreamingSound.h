@@ -16,5 +16,7 @@ public:
     DWORD m_dwNotifySize;
     int idk2;
     int soundFlag;
+
+    static HRESULT stopSounds(CStreamingSound* This, int soundIndexMaybe);
 };
 ASSERT_SIZE(CStreamingSound, 0x7c); // Size Verified

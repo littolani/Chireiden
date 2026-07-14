@@ -55,15 +55,20 @@ public:
     uint32_t frameSkipFlagProbably;              // <0x564>
     int idk7[5];                                 // <0x568>
     uint32_t m_noVerticalSyncFlag;               // <0x57c>
-    int idk8[2];                                 // <0x580>
+    int idk8;                                    // <0x580>
+    int idk24;
     AnmLoaded* textAnm;                          // <0x588>
     int idk9;                                    // <0x58c>
     uint32_t flags;                              // <0x590>
     DWORD currentTime;                           // <0x594>
-    uint32_t idk10[78];                          // <0x598>
+    int idk25;
+    D3DCAPS9 d3dcaps;
+    int idk26;
     uint32_t snapshotFlag;                       // <0x6d0>
-    uint16_t snapshotBuffer;                     // <0x6d4>
-    uint16_t idk11[7];                           // <0x6d6>
+    uint16_t* snapshotBuffer;                     // <0x6d4>
+    int idk27;
+    int idk28;
+    int idk29;
     void* snapshotRelated;                       // <0x6e4>
     uint32_t* snapshotDataProbably;              // <0x6e8>
     char snapshotFilename[MAX_PATH];             // <0x6ec>
@@ -105,6 +110,9 @@ public:
     static void cleanup(Supervisor* This);
     static int readKeyInput();
     static int updateJoystickState(int keyboardInput);
+    static void initialize();
+    //static ChainCallbackResult __fastcall onTick(void* This);
+    //static ChainCallbackResult __fastcall onRegister(void* This);
 };
 #pragma pack(pop)
 ASSERT_SIZE(Supervisor, 0x9c4);

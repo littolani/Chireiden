@@ -26,9 +26,9 @@ public:
     LARGE_INTEGER performanceCounterFreq;
     LARGE_INTEGER performanceCounterValue;
     DWORD unusualLaunchFlag;
-    DWORD primaryScreenWorkingArea;
-    DWORD mouseSpeed;
-    int idk1;
+    DWORD screenSaveActive;
+    DWORD lowerPowerActive;
+    int powerOffActive;
     uint32_t someFlag2;
     int idk2;
     double frameDeltaTime;

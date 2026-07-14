@@ -9,6 +9,216 @@
 #include "InputManager.h"
 #include <bit>
 
+void Supervisor::initialize()
+{
+#if 0
+    g_supervisor.gameMode = -2;
+    g_supervisor.gameModeToSwitchTo = 0;
+    g_supervisor.idk6 = 0;
+
+    ChainElem* chainElem = (ChainElem*)game_new(sizeof(ChainElem));
+    if (!chainElem)
+    {
+        puts("Supervisor::initialize(): Could not allocate ChainElem\n");
+        return;
+    }
+
+    auto addChain = [&](int priority, ChainCallback callback, ChainCallback onRegisterCb, bool isCalcChain) -> int {
+        ChainElem* elem = (ChainElem*)game_new(sizeof(ChainElem));
+        elem->nextNode = (ChainElem*)((uintptr_t)elem->nextNode | 3);
+        elem->jobRunDrawChainCallback = callback;
+        elem->args = &g_supervisor;
+        elem->registerChainCallback = nullptr;
+        elem->runCalcChainCallback = nullptr;
+
+        int res = 0;
+        if (isCalcChain)
+            res = g_chain->registerCalcChain(g_chain, elem, priority);
+        else
+            res = g_chain->registerDrawChain(elem, priority);
+        return res;
+    };
+
+    int res = addChain(1, onTick, onRegister, true);
+    if (res != 0)
+    {
+        puts("Supervisor register went wrong?\n");
+        return;
+    }
+        
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw01;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 1);
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw0b;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 0xb);
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev =
+        //    (ChainElem*)onDraw0dVm0AndLayer27;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 0xd);
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw23;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 0x23);
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev =
+        //    (ChainElem*)onDraw25Vm1AndLayer28;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 0x25);
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw2e;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 0x2e);
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw2fVm2;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 0x2f);
+        //chainElem = (ChainElem*)operator_new(0x24);
+        //if (chainElem == (ChainElem*)0x0) {
+        //    chainElem = (ChainElem*)0x0;
+        //}
+        //else {
+        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
+        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
+        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
+        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
+        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
+        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
+        //}
+        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
+        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw44;
+        //chainElem->registerChainCallback = (ChainCallback*)0x0;
+        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
+        //chainElem->args = &g_supervisor;
+        //Chain::registerDrawChain(chainElem, 0x44);
+#endif
+}
+
+void onTick(void* This)
+{
+}
+
+void onRegister(void* This)
+{
+}
+
 void Supervisor::releaseDinputIface()
 {
     IDirectInput8A* iDirectInput8;
@@ -134,28 +344,17 @@ int Supervisor::verifyGameConfig()
 // 0x447270
 void Supervisor::resetRenderState()
 {
-    // Depth Buffer (Z-Buffer)
     g_supervisor.d3dDevice->SetRenderState(D3DRS_ZENABLE, D3DZB_TRUE);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_ALWAYS);
-
-    // Lighting & Culling
     g_supervisor.d3dDevice->SetRenderState(D3DRS_LIGHTING, FALSE);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE); // Render both sides of triangles
-
-    // Alpha Blending (Standard Transparency)
     g_supervisor.d3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-
-    // Shading
     g_supervisor.d3dDevice->SetRenderState(D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
-
-    // Alpha Testing (Cutout transparency)
     g_supervisor.d3dDevice->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_ALPHAREF, 0x01);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
-
-    // Fog Settings
     g_supervisor.d3dDevice->SetRenderState(D3DRS_FOGENABLE, TRUE);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_FOGTABLEMODE, D3DFOG_NONE);
     g_supervisor.d3dDevice->SetRenderState(D3DRS_FOGVERTEXMODE, D3DFOG_LINEAR);
@@ -163,37 +362,18 @@ void Supervisor::resetRenderState()
     g_supervisor.d3dDevice->SetRenderState(D3DRS_FOGDENSITY, std::bit_cast<DWORD>(1.0f));
     g_supervisor.d3dDevice->SetRenderState(D3DRS_FOGSTART, std::bit_cast<DWORD>(1000.0f));
     g_supervisor.d3dDevice->SetRenderState(D3DRS_FOGEND, std::bit_cast<DWORD>(5000.0f));
-
-    // Antialiasing
     g_supervisor.d3dDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, FALSE);
-
-
-    // --- Texture Stage States (Stage 0) ---
-
-    // Color Operations: Modulate (Multiply) Texture * TFACTOR
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-    // Magic number 3 is D3DTA_TFACTOR. If you intended to mix with vertex color, use D3DTA_DIFFUSE or D3DTA_CURRENT.
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TFACTOR);
-
-    // Alpha Operations: Modulate Texture * TFACTOR
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_TFACTOR);
-
-    // Coordinates
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
     g_supervisor.d3dDevice->SetTextureStageState(0, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_PASSTHRU);
-
-
-    // --- Sampler States (Stage 0) ---
-
-    // Filtering (Trilinear interpolation logic looks intended here)
     g_supervisor.d3dDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);   // No Mipmap filtering
     g_supervisor.d3dDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR); // Linear Magnification
     g_supervisor.d3dDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR); // Linear Minification
-
-    // Addressing (Wrap UV, Clamp W)
     g_supervisor.d3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSU, D3DTADDRESS_WRAP);
     g_supervisor.d3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_WRAP);
     g_supervisor.d3dDevice->SetSamplerState(0, D3DSAMP_ADDRESSW, D3DTADDRESS_CLAMP);
@@ -211,8 +391,6 @@ void Supervisor::resetRenderState()
 
 BOOL CALLBACK enumDeviceObjectsCallback(LPCDIDEVICEOBJECTINSTANCEA lpddoi, LPVOID pvRef)
 {
-    // Check if the object is an axis (either Absolute or Relative)
-    // DIDFT_AXIS = 3. The check (lpddoi->dwType & 3) verifies this.
     if ((lpddoi->dwType & DIDFT_AXIS) != 0) {
         DIPROPRANGE diprg;
 
@@ -223,19 +401,16 @@ BOOL CALLBACK enumDeviceObjectsCallback(LPCDIDEVICEOBJECTINSTANCEA lpddoi, LPVOI
         diprg.lMin = -1000;               // 0xFFFFFC18
         diprg.lMax = 1000;                // 0x000003E8
 
-        // Set the range property on the global joystick instance
-        // Assuming g_supervisor is the global instance of Supervisor
         if (FAILED(g_supervisor.joystick->SetProperty(DIPROP_RANGE, &diprg.diph))) {
-            return DIENUM_STOP; // 0
+            return DIENUM_STOP;
         }
     }
-    return DIENUM_CONTINUE; // 1
+    return DIENUM_CONTINUE;
 }
 
 // 0x00447cb0
 BOOL CALLBACK enumJoysticksCallback(LPCDIDEVICEINSTANCEA lpddi, LPVOID pvRef)
 {
-    // Only create a device if we haven't found one yet
     if (g_supervisor.joystick == nullptr)
     {
         HRESULT hr = g_supervisor.dInputInterface->CreateDevice(
@@ -247,40 +422,33 @@ BOOL CALLBACK enumJoysticksCallback(LPCDIDEVICEINSTANCEA lpddi, LPVOID pvRef)
         if (FAILED(hr))
             return DIENUM_CONTINUE;
     }
-
-    // If successful (or if we somehow already had a joystick), return 0 (DIENUM_STOP)
-    // to stop enumerating. We only support one controller.
     return DIENUM_STOP;
 }
 
 int Supervisor::initializeInputDevices(Supervisor* This)
 {
-    // 0x447ab3: Check Config Flags (Bit 3 usually indicates Input Disabled)
     if (This->m_gameConfig.flags & 8)
         return -1;
 
-    // 0x447ad8: Create DirectInput8 Interface
-    // Assembly 447aba loads g_hInstance into the register passed here
     HRESULT hr = DirectInput8Create(
         g_window.hInstance,
-        DIRECTINPUT_VERSION, // 0x0800
+        DIRECTINPUT_VERSION,
         IID_IDirectInput8,
         (void**)&This->dInputInterface,
         nullptr
     );
 
-    if (FAILED(hr)) {
+    if (FAILED(hr))
+    {
         This->dInputInterface = nullptr;
         puts("DirectInput cannot be used\n");
         return -1;
     }
 
-    // 0x447b13: Create Keyboard Device
-    // 0x48cc5c is likely the address of GUID_SysKeyboard
     hr = This->dInputInterface->CreateDevice(GUID_SysKeyboard, &This->keyboard, nullptr);
 
-    if (FAILED(hr)) {
-        // Cleanup and Log
+    if (FAILED(hr))
+    {
         if (This->dInputInterface) {
             This->dInputInterface->Release();
             This->dInputInterface = nullptr;
@@ -289,16 +457,15 @@ int Supervisor::initializeInputDevices(Supervisor* This)
         return -1;
     }
 
-    // 0x447b41: Set Keyboard Data Format
     hr = This->keyboard->SetDataFormat(&c_dfDIKeyboard);
 
-    if (FAILED(hr)) {
-        // Cleanup Keyboard
+    if (FAILED(hr))
+    {
         if (This->keyboard) {
             This->keyboard->Release();
             This->keyboard = nullptr;
         }
-        // Cleanup Interface
+
         if (This->dInputInterface) {
             This->dInputInterface->Release();
             This->dInputInterface = nullptr;
@@ -312,13 +479,13 @@ int Supervisor::initializeInputDevices(Supervisor* This)
         DISCL_NOWINKEY | DISCL_FOREGROUND | DISCL_NONEXCLUSIVE
     );
 
-    if (FAILED(hr)) {
-        // Cleanup Keyboard
+    if (FAILED(hr))
+    {
         if (This->keyboard) {
             This->keyboard->Release();
             This->keyboard = nullptr;
         }
-        // Cleanup Interface
+
         if (This->dInputInterface) {
             This->dInputInterface->Release();
             This->dInputInterface = nullptr;
@@ -351,7 +518,6 @@ int Supervisor::initializeInputDevices(Supervisor* This)
         
         puts("Found a valid gamepad\n");
     }
-
     return 0;
 }
 
@@ -404,259 +570,228 @@ void Supervisor::setupViewport()
 // 0x446d30
 int Supervisor::initD3d9Devices(D3DFORMAT d3dFormat)
 {
-    printf("initD3d9Devices\n");
-    HRESULT hr;
     D3DDISPLAYMODE currentDisplayMode;
     D3DPRESENT_PARAMETERS d3dpp;
+    HRESULT hr;
+    Supervisor* This = &g_supervisor;
 
-    g_supervisor.d3dInterface0->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &currentDisplayMode);
-    g_supervisor.currentDisplayModeWidth = currentDisplayMode.Width;
-    g_supervisor.currentDisplayModeHeight = currentDisplayMode.Height;
-    g_supervisor.d3dPresentationIntervalFlag = currentDisplayMode.RefreshRate;
-    g_supervisor.d3dPresentBackBuferFormat = currentDisplayMode.Format;
+    // Zero out presentation parameters (memset at 446d46)
+    memset(&d3dpp, 0, sizeof(D3DPRESENT_PARAMETERS));
 
-    int presentationInterval = D3DPRESENT_INTERVAL_DEFAULT; // Default (usually matches RefreshRate or 60)
+    // Get the current display mode (446d5c)
+    This->d3dInterface0->GetAdapterDisplayMode(D3DADAPTER_DEFAULT, &currentDisplayMode);
 
-    // 2. Validate Refresh Rate (0x3c = 60Hz)
-    if (g_supervisor.m_gameConfig.displayMode != 0) // Windowed mode check?
+    // Cache the adapter details (446d6d - 446d82)
+    This->currentDisplayModeWidth = currentDisplayMode.Width;
+    This->currentDisplayModeHeight = currentDisplayMode.Height;
+    This->d3dPresentationIntervalFlag = currentDisplayMode.RefreshRate;
+    This->d3dPresentBackBuferFormat = currentDisplayMode.Format;
+
+    // config displayMode check (fullscreen vs windowed flag handling)
+    if (This->m_gameConfig.displayMode != 0)
     {
         if (currentDisplayMode.RefreshRate != 60)
         {
-            printf("Refresh rate is not 60Hz\n");
-            g_window.someFlag2 &= ~0x10;
+            puts("リフレッシュレートが60Hzではありません\n");
+            g_window.someFlag2 &= ~0x10; // Remove the fullscreen/windowed bit
         }
-
-        // Logic for setting presentation interval based on config/flags
-        //currentDisplayMode.Format = (D3DFORMAT)currentDisplayMode.Width; // (Ghidra artifact likely, ignored)
-
-        bool lowLatency = (g_window.someFlag2 & 0x10) || (g_supervisor.m_gameConfig.latencyMode == 3);
-        if (lowLatency || currentDisplayMode.RefreshRate != 60)
-            presentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // No VSync
-        else
-            presentationInterval = D3DPRESENT_INTERVAL_ONE; // VSync
-
-        goto SETUP_PRESENT_PARAMS;
     }
 
-    // Color Depth Configuration
-    if ((g_supervisor.m_gameConfig.flags & 1) == 0)
+    // Determine Color Depth / BackBufferFormat
+    if ((This->m_gameConfig.flags & 1) != 0)
     {
-        if (g_supervisor.m_gameConfig.colorDepth == 0xFF)
-        {
-            currentDisplayMode.Format = D3DFMT_X8R8G8B8;
-            g_supervisor.m_gameConfig.colorDepth = 0;
-            printf("First launch, D3D Device at %p initialized screen to 32Bits\n", g_supervisor.d3dDevice);
-        }
-        else
-            currentDisplayMode.Format = (g_supervisor.m_gameConfig.colorDepth != 0) ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
+        // Windowed Mode: Force 16-bit color depth equivalent
+        d3dpp.BackBufferFormat = D3DFMT_R5G6B5;
+        This->m_gameConfig.colorDepth = 1;
     }
     else
     {
-        currentDisplayMode.Format = D3DFMT_R5G6B5;
-        g_supervisor.m_gameConfig.colorDepth = 1;
+        // Fullscreen Mode
+        if (This->m_gameConfig.colorDepth == 0xFF)
+        {
+            puts("初回起動、画面を 32Bits で初期化しました\n");
+            d3dpp.BackBufferFormat = D3DFMT_X8R8G8B8;
+            This->m_gameConfig.colorDepth = 0;
+        }
+        else
+        {
+            d3dpp.BackBufferFormat = (This->m_gameConfig.colorDepth == 0) ? D3DFMT_X8R8G8B8 : D3DFMT_R5G6B5;
+        }
     }
 
-    // VSync / Latency Logic
+    // Handling unusual launch and VSync settings
     if (g_window.unusualLaunchFlag == 0)
     {
-        if (g_supervisor.m_noVerticalSyncFlag == 0)
+        if (This->m_noVerticalSyncFlag == 0)
         {
             if ((g_window.someFlag2 & 0x10) == 0)
             {
-                presentationInterval = (g_supervisor.m_gameConfig.latencyMode != 3) ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+                // Standard Fullscreen
+                d3dpp.FullScreen_RefreshRateInHz = 60;
+                d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;
             }
             else
-                presentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-
-            printf("Attempting to change refresh rate to 60Hz of D3D Device at %p\n", g_supervisor.d3dDevice);
-            goto SETUP_PRESENT_PARAMS;
+            {
+                // Standard Windowed
+                d3dpp.FullScreen_RefreshRateInHz = 0;
+                d3dpp.PresentationInterval = (This->m_gameConfig.latencyMode == 3) ? D3DPRESENT_INTERVAL_IMMEDIATE : D3DPRESENT_INTERVAL_ONE;
+            }
+            puts("リフレッシュレートを60Hzに変更を試みます\r\n");
+            d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+        }
+        else
+        {
+            // VSync disabled in config
+            d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+            puts("VSync非同期可能かどうかを試みます\r\n");
+            d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         }
     }
     else
     {
-        g_supervisor.m_noVerticalSyncFlag = 1;
+        // Safe mode / Unusual Launch: Force Windowed and Immediate VSync (446ebb block)
+        This->m_noVerticalSyncFlag = 1;
+        d3dpp.BackBufferFormat = currentDisplayMode.Format;
+        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+        d3dpp.Windowed = TRUE;
+
+        if (This->m_gameConfig.latencyMode == 3 || currentDisplayMode.RefreshRate == 60) {
+            d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+        }
+        else {
+            d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+        }
     }
 
-    presentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-    printf("Attempting VSync async possible check of D3D Device at %p\n", g_supervisor.d3dDevice);
-
-SETUP_PRESENT_PARAMS:
-    g_supervisor.flags |= 2;
-    memset(&d3dpp, 0, sizeof(D3DPRESENT_PARAMETERS));
-
+    This->flags |= 2;
     d3dpp.BackBufferWidth = 640;
     d3dpp.BackBufferHeight = 480;
-    d3dpp.BackBufferFormat = currentDisplayMode.Format;
-    d3dpp.BackBufferCount = 1;
-    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-    d3dpp.hDeviceWindow = g_window.hwnd;
-    d3dpp.Windowed = TRUE;
+    if (g_window.unusualLaunchFlag == 0) d3dpp.Windowed = ((g_window.someFlag2 & 0x10) != 0); // Setup Windowed if not previously forced
     d3dpp.EnableAutoDepthStencil = TRUE;
-    d3dpp.AutoDepthStencilFormat = D3DFMT_D16; // Standard depth buffer
-    d3dpp.Flags = 0;
-    d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-    d3dpp.PresentationInterval = presentationInterval;
+    d3dpp.AutoDepthStencilFormat = D3DFMT_D16;
+    d3dpp.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER; // 1
 
-    g_supervisor.idk8[0] = 1;
+    This->idk8 = 1; // VSync sync capable flag
     bool isResetAttempted = false;
 
+    // Retry loop for device creation
     while (true)
     {
-        // Try Hardware Vertex Processing (T&L HAL)
-        if ((g_supervisor.m_gameConfig.flags & 2) == 0)
+        // Attempt HAL if config doesn't force REF
+        if ((This->m_gameConfig.flags & 2) == 0)
         {
-            hr = g_supervisor.d3dInterface0->CreateDevice(
-                D3DADAPTER_DEFAULT,
-                D3DDEVTYPE_HAL,
-                g_window.hwnd,
-                D3DCREATE_HARDWARE_VERTEXPROCESSING,
-                &d3dpp,
-                &g_supervisor.d3dDevice
-            );
+            // Try Hardware Vertex Processing
+            hr = This->d3dInterface0->CreateDevice(
+                D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, g_window.hwnd,
+                D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dpp, &This->d3dDevice);
 
-            if (SUCCEEDED(hr))
-            {
-                printf("Running D3D device at %p with T&L HAL\n", g_supervisor.d3dDevice);
-#ifdef IMGUI_DEBUG_WINDOW
-                InitDebugWindow(g_supervisor.d3dDevice);  //ImGuiHook::getInstance().hook(g_supervisor.d3dDevice);
-                printf("ImGui Hook Attached.\n");
-#endif
-                g_supervisor.flags |= 1;
-                goto DEVICE_CREATED;
+            if (SUCCEEDED(hr)) {
+                puts("T&L HAL で動作しま〜す\r\n");
+                This->flags |= 1;
+                break;
             }
 
-            if (isResetAttempted)
-                printf("T&L HAL seems unusable for D3D device at %p\n", g_supervisor.d3dDevice);
-
-            // Fallback to Software Vertex Processing (HAL)
-            hr = g_supervisor.d3dInterface0->CreateDevice(
-                D3DADAPTER_DEFAULT,
-                D3DDEVTYPE_HAL,
-                g_window.hwnd,
-                D3DCREATE_SOFTWARE_VERTEXPROCESSING,
-                &d3dpp,
-                &g_supervisor.d3dDevice
-            );
-
-            if (SUCCEEDED(hr))
-            {
-                printf("Running D3D Device at %p with HAL\n", g_supervisor.d3dDevice);
-#ifdef IMGUI_DEBUG_WINDOW
-                InitDebugWindow(g_supervisor.d3dDevice); //ImGuiHook::getInstance().hook(g_supervisor.d3dDevice);
-                printf("ImGui Hook Attached.\n");
-#endif
-                g_supervisor.flags &= ~1;
-                goto DEVICE_CREATED;
+            if (isResetAttempted) {
+                puts("T&L HAL は使用できないようです\r\n");
             }
 
-            if (isResetAttempted)
-                printf("HAL also seems unusable for D3D Device at %p\n", g_supervisor.d3dDevice);
+            // Try Software Vertex Processing
+            hr = This->d3dInterface0->CreateDevice(
+                D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, g_window.hwnd,
+                D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &This->d3dDevice);
+
+            if (SUCCEEDED(hr)) {
+                puts("HAL で動作します\r\n");
+                This->flags &= ~1;
+                break;
+            }
+
+            if (isResetAttempted) {
+                puts("HAL も使用できないようです\r\n");
+        }
+    }
+
+        // Fallback to REF rasterizer
+        hr = This->d3dInterface0->CreateDevice(
+            D3DADAPTER_DEFAULT, D3DDEVTYPE_REF, g_window.hwnd,
+            D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dpp, &This->d3dDevice);
+
+        if (SUCCEEDED(hr)) {
+            puts("REF で動作しますが、重すぎて恐らくゲームになりません...\r\n");
+            This->flags &= ~1;
+            break;
         }
 
-        // Fallback to Reference Rasterizer (REF) - extremely slow
-        hr = g_supervisor.d3dInterface0->CreateDevice(
-            D3DADAPTER_DEFAULT,
-            D3DDEVTYPE_REF,
-            g_window.hwnd,
-            D3DCREATE_SOFTWARE_VERTEXPROCESSING,
-            &d3dpp,
-            &g_supervisor.d3dDevice
-        );
-
-        if (SUCCEEDED(hr))
-            break; // Found a device (REF)
-
-        // Error Handling
-        if (g_supervisor.m_noVerticalSyncFlag == 0)
-        {
-            printf("Cannot change refresh rate of D3D Device at %p\n", g_supervisor.d3dDevice);
-            g_supervisor.idk8[0] = 0;
+        // Handle Failure
+        if (This->m_noVerticalSyncFlag == 0) {
+            puts("リフレッシュレートが変更できません\r\n");
+            d3dpp.FullScreen_RefreshRateInHz = 0; // Drop explicit refresh rate
+            This->idk8 = 0;
             isResetAttempted = true;
         }
-        else
-        {
-            if (d3dpp.PresentationInterval != D3DPRESENT_INTERVAL_ONE)
-            {
-                printf("Failed to initialize Direct3D, cannot play game\n");
-                if (g_supervisor.d3dInterface0)
-                {
-                    g_supervisor.d3dInterface0->Release();
-                    g_supervisor.d3dInterface0 = nullptr;
+        else {
+            if (d3dpp.PresentationInterval == D3DPRESENT_INTERVAL_ONE) {
+                d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+            }
+            else {
+                puts("Direct3D の初期化に失敗、これではゲームは出来ません\r\n");
+                if (This->d3dInterface0 != nullptr) {
+                    This->d3dInterface0->Release();
+                    This->d3dInterface0 = nullptr;
                 }
                 return 1;
             }
-            d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
         }
+}
+
+    // Save final creation parameters
+    memcpy(&This->m_d3dPresetParameters, &d3dpp, sizeof(D3DPRESENT_PARAMETERS));
+
+    // Setup matrices
+    float fov = 0.5235988f; // ~30 degrees in radians
+    D3DXVECTOR3 cameraPosition(320.0f, -240.0f, -(240.0f / tanf(fov)));
+    D3DXVECTOR3 cameraTargetPoint(320.0f, -240.0f, 0.0f);
+    D3DXVECTOR3 cameraUpVector(0.0f, 1.0f, 0.0f);
+
+    D3DXMatrixLookAtLH(&This->d3dMatrix1, &cameraPosition, &cameraTargetPoint, &cameraUpVector);
+    D3DXMatrixPerspectiveFovLH(&This->d3dMatrix2, fov, 1.3333334f /* 640/480 */, 10.0f, 10000.0f);
+
+    This->d3dDevice->SetTransform(D3DTS_VIEW, &This->d3dMatrix1);
+    This->d3dDevice->SetTransform(D3DTS_PROJECTION, &This->d3dMatrix2);
+    This->d3dDevice->GetViewport(&This->d3dViewport);
+
+    // Capabilities check
+    This->d3dDevice->GetDeviceCaps(&This->d3dcaps);
+
+    if ((This->d3dcaps.TextureOpCaps & D3DTEXOPCAPS_ADD) == 0) {
+        puts("D3DTEXOPCAPS_ADD をサポートしていません、色加算エミュレートモードで動作します\r\n");
     }
 
-    printf("Running D3D Device at %p with REF, probably too slow to play...\n", g_supervisor.d3dDevice);
-#ifdef IMGUI_DEBUG_WINDOW
-    //ImGuiHook::getInstance().hook(g_supervisor.d3dDevice);
-    InitDebugWindow(g_supervisor.d3dDevice);
-    printf("ImGui Hook Attached.\n");
-#endif
-    g_supervisor.flags &= ~1;
+    if (This->d3dcaps.MaxTextureWidth < 512) {
+        puts("512 以上のテクスチャをサポートしていません。殆どの絵がボケて表示されます。\r\n");
+    }
 
-DEVICE_CREATED:
-    
-    g_supervisor.m_d3dPresetParameters = d3dpp; // Copy successful presentation parameters to Supervisor member
-
-    // Set View Matrix (LookAtLH)
-    D3DXVECTOR3 cameraPosition(320.0f, -240.0f, 0.0f);
-    D3DXVECTOR3 cameraTarget(320.0f, -240.0f, 0.0f);
-    D3DXVECTOR3 cameraUp(0.0f, 1.0f, 0.0f);
-
-    // Calculate Z position for 30 degree FOV to fit 480 height
-
-    float fovY = D3DXToRadian(30.0f); // 0x3e860a92 is approx 15 degrees in radians
-    float tanHalfFov = tanf(fovY / 2.0f);
-    cameraPosition.z = -(240.0f / tanHalfFov);
-
-    D3DXMatrixLookAtLH(&g_supervisor.d3dMatrix1, &cameraPosition, &cameraTarget, &cameraUp);
-
-    // Set Projection Matrix (PerspectiveFovLH)
-    D3DXMatrixPerspectiveFovLH(&g_supervisor.d3dMatrix2, fovY, 4.0f / 3.0f, 100.0f, 10000.0f);
-
-    g_supervisor.d3dDevice->SetTransform(D3DTS_VIEW, &g_supervisor.d3dMatrix1);
-    g_supervisor.d3dDevice->SetTransform(D3DTS_PROJECTION, &g_supervisor.d3dMatrix2);
-    g_supervisor.d3dDevice->GetViewport(&g_supervisor.d3dViewport);
-
-    // Check Capabilities
-    D3DCAPS9 caps;
-    g_supervisor.d3dDevice->GetDeviceCaps(&caps);
-
-    if (!(caps.TextureOpCaps & D3DTEXOPCAPS_ADD))
-        printf("D3DTEXOPCAPS_ADD not supported for D3D Device at %p, running in color add emulate mode\n", g_supervisor.d3dDevice);
-
-    if (caps.MaxTextureWidth < 256 || caps.MaxTextureHeight < 256) // 0x101 check implies 257? likely 256 check
-        printf("D3D Device at %p does not support 512+ textures. Images will be blurry.\n", g_supervisor.d3dDevice);
-
-    // Check Texture Format Support (D3DFMT_A8R8G8B8)
-    if ((g_supervisor.m_gameConfig.flags & 1) == 0 && (d3dFormat >> 24) != 0)
+    // Alpha support check
+    if ((This->m_gameConfig.flags & 1) == 0 && (d3dFormat >> 24) != 0)
     {
-        hr = g_supervisor.d3dInterface0->CheckDeviceFormat(
-            D3DADAPTER_DEFAULT,
-            D3DDEVTYPE_HAL,
-            currentDisplayMode.Format,
-            0,
-            D3DRTYPE_TEXTURE,
-            D3DFMT_A8R8G8B8
-        );
-
-        if (hr == D3D_OK)
-            g_supervisor.flags |= 4;
+        if (This->d3dInterface0->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, currentDisplayMode.Format, 0, D3DRTYPE_TEXTURE, D3DFMT_A8R8G8B8) == D3D_OK)
+        {
+            This->flags |= 4; // Supports alpha format
+        }
         else
         {
-            g_supervisor.flags &= ~4;
-            g_supervisor.m_gameConfig.flags |= 1;
-            printf("D3DFMT_A8R8G8B8 not supported on D3D Device at %p, running in reduced color mode\n", g_supervisor.d3dDevice);
+            This->flags &= ~4;
+            This->m_gameConfig.flags |= 1; // Force fallback
+            puts("D3DFMT_A8R8G8B8 をサポートしていません、減色モードで動作します\r\n");
         }
     }
 
-    resetRenderState();
-    setupViewport();
+    This->resetRenderState();
+    This->setupViewport();
+
     g_window.timeForCleanup = 0;
-    g_supervisor.idk8[1] = 0;
+    This->idk24 = 0;
+
     return 0;
 }
 
@@ -680,7 +815,7 @@ void Supervisor::setupCameras(Supervisor* This)
 
 void Supervisor::swapCameraTransformMatrices(Camera* cam)
 {
-    // Touhou 11 uses a fixed FOV of PI/10 (approx 18 degrees) for this camera mode
+    // Touhou 11 uses a fixed FOV of PI/10 (approx 18 degrees) for This camera mode
     const float FOV_RADIANS = D3DX_PI / 10.0f;
     const float Z_NEAR = 1.0f;
     const float Z_FAR = 10000.0f;

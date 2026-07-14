@@ -18,5 +18,7 @@ public:
     static int increment(Timer* This);
 
     static void set(Timer* This, int time);
+
+    static BOOL isTickMultipleOf(Timer* This, int i);
 };
 ASSERT_SIZE(Timer, 0x14);

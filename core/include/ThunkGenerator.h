@@ -1,7 +1,6 @@
 #pragma once
 #include <windows.h>
 #include <cstdint>
-#include <iostream>
 #include <type_traits>
 #include <vector>
 #include <utility>
@@ -9,13 +8,76 @@
 template<typename F>
 inline void installHook(DWORD addr, F hookFunc)
 {
-    void* funcAddr = reinterpret_cast<void*>(hookFunc);
+    LPVOID funcAddr = reinterpret_cast<LPVOID>(hookFunc);
     DWORD relativeJump = (DWORD)funcAddr - addr - 5;
     DWORD oldProtect;
-    VirtualProtect((void*)addr, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
+    VirtualProtect((LPVOID)addr, 5, PAGE_EXECUTE_READWRITE, &oldProtect);
     *(BYTE*)addr = 0xE9; // JMP opcode
     *(DWORD*)(addr + 1) = relativeJump;
-    VirtualProtect((void*)addr, 5, oldProtect, &oldProtect);
+    VirtualProtect((LPVOID)addr, 5, oldProtect, &oldProtect);
+}
+
+/**
+ * @brief Allocate a block of memory that holds the unbroken bytes taken from the shim's target function. This function assumes the bytes copied from the original function do not contain any relative offsets from jmp, call, etc
+ * @param originalAddr address of the shim's target function
+ * @param numBytesToReplace number of bytes to extract (must not slice instructions in-between and must be > 5)
+ */
+inline LPVOID createTrampoline(DWORD originalAddr, size_t numBytesToReplace)
+{
+    if (numBytesToReplace < 5)
+    {
+        puts("Byte length must be greater than 5 in order to fit jmp instruction\n");
+        return nullptr;
+    }
+    
+    // Extra 5 for the jmp back to the original function
+    size_t numBytesTotal = numBytesToReplace + 5;
+
+    LPVOID trampoline = VirtualAlloc(
+        nullptr,
+        numBytesTotal, 
+        MEM_COMMIT | MEM_RESERVE,
+        PAGE_EXECUTE_READWRITE
+    );
+
+    if (!trampoline)
+    {
+        puts("VirtualAlloc failed\n");
+        return nullptr;
+    }
+
+    memcpy(trampoline, (LPVOID)originalAddr, numBytesToReplace);
+
+    DWORD returnTarget = originalAddr + numBytesToReplace;
+    DWORD trampolineJmpAddr = (DWORD)trampoline + numBytesToReplace;
+
+    *(BYTE*)trampolineJmpAddr = 0xe9;
+    *(DWORD*)(trampolineJmpAddr + 1) = returnTarget - (trampolineJmpAddr + 5);
+
+    DWORD oldProtect;
+    VirtualProtect(trampoline, numBytesTotal, PAGE_EXECUTE_READWRITE, &oldProtect);
+    FlushInstructionCache(GetCurrentProcess(), trampoline, numBytesTotal);
+    return trampoline;
+}
+
+inline void installTrampoline(DWORD addr, LPVOID hookFunc, size_t numBytesToReplace)
+{
+    if (numBytesToReplace < 5)
+    {
+        puts("Byte length must be greater than 5 in order to fit jmp instruction\n");
+        return;
+    }
+
+    DWORD oldProtect;
+    VirtualProtect((LPVOID)addr, numBytesToReplace, PAGE_EXECUTE_READWRITE, &oldProtect);
+    *(BYTE*)addr = 0xe9;
+    *(DWORD*)(addr + 1) = (DWORD)hookFunc - addr - 5;
+
+    for (int i = 5; i < numBytesToReplace; ++i)
+        *(BYTE*)(addr + i) = 0x90; // NOP
+
+    VirtualProtect((LPVOID)addr, numBytesToReplace, oldProtect, &oldProtect);
+    FlushInstructionCache(GetCurrentProcess(), (LPVOID)addr, numBytesToReplace);
 }
 
 // Represents a value located on the stack at [EBP + Offset]
@@ -163,16 +225,16 @@ public:
         }
     }
 
-    void call(void* target, void* currentIP)
+    void call(LPVOID target, LPVOID currentIP)
     {
         addByte(0xE8);
         uint32_t rel = (uint32_t)target - ((uint32_t)currentIP + 5);
         addDword(rel);
     }
 
-    void* finalize()
+    LPVOID finalize()
     {
-        void* mem = VirtualAlloc(nullptr, code.size(), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+        LPVOID mem = VirtualAlloc(nullptr, code.size(), MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
         if (mem) memcpy(mem, code.data(), code.size());
 
         // TELL THE CPU WE WROTE NEW CODE
@@ -256,9 +318,11 @@ void ProcessArgsReverse(CodeEmitter& e)
 }
 
 template <typename RetLoc, typename... ArgLocs, typename F>
-void* createLtoThunk(F targetFunc, int retN)
+LPVOID createLtoThunk(const F& targetFunc, int retN)
 {
-    void* targetPtr = reinterpret_cast<void*>(targetFunc);
+    LPVOID targetPtr = (LPVOID)(+targetFunc);
+    //LPVOID bad = *(LPVOID*)&targetFunc;
+    //printf("%p", bad);
     CodeEmitter e;
 
     // Prologue

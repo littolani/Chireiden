@@ -10,3 +10,8 @@ void ItemManager::spawnItem(
 ) {
     
 }
+
+void ItemManager::reimuBAutoCollect()
+{
+
+}

@@ -1,22 +1,9 @@
 #pragma once
 #include "Chireiden.h"
 #include "EclManager.h"
+#include "EclRunContext.h"
 #include "EclStack.h"
 #include "Macros.h"
-
-class Enemy;
-struct EclRunContext
-{
-    float time;
-    EclInstruction* currentInstruction;
-    EclStack stack;
-    int asyncId;
-    Enemy* enemy;
-    int setByIns20;
-    uint8_t difficultyMask;
-    int setByIns1819;
-};
-ASSERT_SIZE(EclRunContext, 0x1024);
 
 struct EclRunContextList
 {
@@ -28,16 +15,16 @@ struct EclRunContextList
 class EclVm
 {
 public:
-    // void* vtable; // 0x0
+     void* vtable; // 0x0
     EclRunContext* currentContext;
     EclRunContext primaryContext;
     void* fileManager;
     EclRunContextList asyncListHead;
 
-    virtual void __thiscall vfunction1();
-    virtual void __thiscall vfunction2();
-    virtual void __thiscall vfunction3();
-    virtual void __thiscall vfunction4();
-    virtual void __thiscall vfunction5();
+    //virtual int __thiscall vfunction1();
+    //virtual int __thiscall vfunction2();
+    //virtual int __thiscall vfunction3();
+    //virtual int __thiscall vfunction4();
+    //virtual int __thiscall vfunction5();
 };
 ASSERT_SIZE(EclVm, 0x103c);

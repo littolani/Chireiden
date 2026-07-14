@@ -262,8 +262,8 @@ void loadTh11Dat()
 
 void projectMagnitudeToVectorComponents(D3DXVECTOR3* vec, float theta, float scale)
 {
-    float c = std::cos(theta);
-    float s = std::sin(theta);
+    float c = std::cosf(theta);
+    float s = std::sinf(theta);
     vec->x = (float)(c * scale);
     vec->y = (float)(s * scale);
 }
@@ -271,6 +271,12 @@ void projectMagnitudeToVectorComponents(D3DXVECTOR3* vec, float theta, float sca
 float normalizeAngle(float inputAngleRadians)
 {
     return std::remainder(inputAngleRadians, 2.0f * D3DX_PI);
+}
+
+void decomposeAngle(Float2* outVec, float angle, float scale)
+{
+    outVec->x = std::cos(angle) * scale;
+    outVec->y = std::sin(angle) * scale;
 }
 
 void decomposeAngle(Float3* outVec, float angle, float scale)

@@ -9,11 +9,13 @@
 #include "Globals.h"
 #include "ThunkGenerator.h"
 #include "FileAbstraction.h"
+#include "Player.h"
 #include "ReplayManager.h"
 #include "ScoreManager.h"
 #include "StdVm.h"
 #include "SoundManager.h"
 #include "LaserLine.h"
+#include <conio.h>
 
 typedef IDirect3D9* (WINAPI* Direct3DCreate9_t)(UINT SDKVersion);
 Direct3DCreate9_t Real_Direct3DCreate9 = nullptr;
@@ -108,16 +110,15 @@ void waitForDebugger()
 
         while (!IsDebuggerPresent())
         {
-            // Check if a key has been pressed in the console
-            if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+            if (_kbhit())
             {
+                _getch();
                 printf("Key pressed. Continuing without debugger.\n");
                 return;
             }
             Sleep(100);
         }
 
-        // If the loop exited because a debugger attached
         printf("Debugger attached!\n");
         Sleep(500);
     }
@@ -133,7 +134,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
 {
     if (fdwReason == DLL_PROCESS_ATTACH)
     {
-        // setupConsole();
+        //  setupConsole();
 
         installHook(0x4540f0, createLtoThunk<Void, ESI>(AnmLoadedD3D::createTextureFromAtR, 0));
 
@@ -176,6 +177,26 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
         installHook(0x44a1e0, createLtoThunk<Void, ESI>(SoundManager::playSoundCentered, 0));
         installHook(0x44a260, createLtoThunk<Void, Stack<0x4>, EDI>(SoundManager::playSoundWithPan, 0x4));
 
+#if 0
+        // This replaces the game's function with my own implementation for testing purposes
+        static LPVOID playSoundWithPanShimTrampoline = createTrampoline(0x44a260, 5);
+
+        static auto playSoundWithPanShim = [](float xOffsetFromCenter, int soundId) -> void
+        {
+            printf("Playing sound %d at x = %.2f\n", soundId, xOffsetFromCenter);
+
+            // let's change the sounds for fun so we know the shim worked
+            soundId -= 1;
+            if (soundId < 0) soundId = 0;
+
+            using ltoSig = Storage<Void, Stack<0x4>, EDI>;
+            using ltoFunc = Signature<Void, float, int>;
+            static auto playSoundWithPanOriginal = createCustomCallingConvention<ltoSig, ltoFunc>((uintptr_t)playSoundWithPanShimTrampoline);
+            playSoundWithPanOriginal(xOffsetFromCenter, soundId);
+        };
+        installTrampoline(0x44a260, createLtoThunk<Void, Stack<0x4>, EDI>(playSoundWithPanShim, 0x4), 5);
+#endif
+
         installHook(0x457080, createLtoThunk<Void, EDX, ECX>(Chain::cut, 0));
         installHook(0x456cb0, createLtoThunk<EAX, EBX>(Chain::runCalcChain, 0));
         installHook(0x456e10, createLtoThunk<EAX>(Chain::runDrawChain, 0));
@@ -205,6 +226,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
 
         installHook(0x446ae0, createLtoThunk<EAX, EBX>(Window::initialize, 0));
 
+        installHook(0x430290, createLtoThunk<Void, Stack<4>>(Player::move, 4));
         // installHook(0x4461f0, createLtoThunk<Void, ESI>(Window::update, 0));
 
         // Globals
@@ -220,7 +242,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
         installHook(0x458a10, createLtoThunk<Void, Stack<0x4>>(logThunk, 0));
         installHook(0x458af0, createLtoThunk<Void, Stack<0x4>>(logThunk, 0));
 
-        // waitForDebugger();
+        //  waitForDebugger();
     }
     return TRUE;
 }

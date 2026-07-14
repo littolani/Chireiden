@@ -45,3 +45,11 @@ int Timer::increment(Timer* This)
   This->m_current = static_cast<int>(This->m_currentF);
   return This->m_current;
 }
+
+BOOL Timer::isTickMultipleOf(Timer* This, int i)
+{
+    if ((This->m_current != This->m_previous) && (This->m_current % i == 0))
+        return TRUE;
+    return FALSE;
+}
+

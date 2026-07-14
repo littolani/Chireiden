@@ -463,9 +463,9 @@ void Window::update(Window* This)
 
 void Window::retrieveSystemStats()
 {
-    SystemParametersInfoA(0x10, 0, &g_window.primaryScreenWorkingArea, 0);
-    SystemParametersInfoA(0x53, 0, &g_window.mouseSpeed, 0);
-    SystemParametersInfoA(0x54, 0, &g_window.idk1, 0);
+    SystemParametersInfoA(0x10, 0, &g_window.screenSaveActive, 0);
+    SystemParametersInfoA(0x53, 0, &g_window.lowerPowerActive, 0);
+    SystemParametersInfoA(0x54, 0, &g_window.powerOffActive, 0);
     SystemParametersInfoA(0x11, 0, NULL, 2);
     SystemParametersInfoA(0x55, 0, NULL, 2);
     SystemParametersInfoA(0x56, 0, NULL, 2);

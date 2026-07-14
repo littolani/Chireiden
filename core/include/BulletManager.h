@@ -7,6 +7,7 @@
 
 class BulletManager
 {
+public:
     int idk0;
     int idk1;
     ChainElem* onCalcChain;

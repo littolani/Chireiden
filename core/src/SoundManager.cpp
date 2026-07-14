@@ -52,7 +52,7 @@ void SoundManager::stopBombReimuAB()
         This->m_sfxSlots[slotIndex] = BOMBLOOP_LOGICAL_ID;
 }
 
-void SoundManager::playSoundCentered(int soundId)
+void SoundManager::playSoundCentered(SoundId soundId)
 {
     printf("Playing sound %d centered\n", soundId);
     SoundManager* This = &g_soundManager;
@@ -266,3 +266,257 @@ HRESULT initCStreamingSound(CStreamingSound** destPtr, IDirectSound8** lplpdsoun
     return S_OK;
 }
 #endif
+
+int SoundManager::close()
+{
+    if (g_soundManager.soundThread)
+    {
+        if (g_soundManager.someState == 0)
+            g_soundManager.someState = 1;
+
+        DWORD waitResult = WaitForSingleObject(g_soundManager.soundThread, 100);
+        while (waitResult == WAIT_TIMEOUT)
+        {
+            Sleep(1);
+            waitResult = WaitForSingleObject(g_soundManager.soundThread, 100);
+        }
+
+        waitResult = WaitForSingleObject(g_soundManager.someHandle, 100);
+        while (waitResult == WAIT_TIMEOUT)
+        {
+            Sleep(1);
+            waitResult = WaitForSingleObject(g_soundManager.someHandle, 100);
+        }
+        CloseHandle(g_soundManager.soundThread);
+        CloseHandle(g_soundManager.someHandle);
+        g_soundManager.soundThread = NULL;
+        g_soundManager.someHandle = NULL;
+    }
+    return 0;
+}
+
+int SoundManager::releaseSounds()
+{
+    SoundManager* This = &g_soundManager;
+    if (This->bgmPreloadFmtData[0] != nullptr)
+    {
+        free(This->bgmPreloadFmtData[0]);
+        This->bgmPreloadFmtData[0] = nullptr;
+    }
+
+    for (int i = 0; i < 128; ++i)
+    {
+        if (This->dsoundBuffers[i] != nullptr)
+        {
+            This->dsoundBuffers[i]->Release();
+            This->dsoundBuffers[i] = nullptr;
+        }
+
+        if (This->soundBuffersArray != nullptr)
+        {
+            This->soundBuffersArray[i].Release();
+            IDirectSoundBuffer** soundBuffersArray = &soundBuffersArray[i];
+            soundBuffersArray = nullptr;
+        }
+    }
+
+    for (int i = 0; i < 46; ++i)
+    {
+        if (This->sounds[i] != nullptr)
+        {
+            free(This->sounds[i]);
+            This->sounds[i] = nullptr;
+        }
+    }
+
+    if (This->dsoundIface != nullptr)
+    {
+        KillTimer(This->hwnd, 1);
+        waitAndStopSounds(This);
+
+        This->dsound = nullptr;
+
+        if (This->dSoundBuffer != nullptr)
+        {
+            This->dSoundBuffer->Stop();
+            This->dSoundBuffer->Release();
+        }
+
+        if (This->cStreamingSound != nullptr)
+        {
+            game_free(&This->cStreamingSound); //TODO: VERIFY CORRECT FREE FUNCTION
+            This->cStreamingSound = nullptr;
+        }
+
+        if (This->dsoundIface != nullptr)
+        {
+            if (*This->dsoundIface != nullptr)
+            {
+                (*This->dsoundIface)->Release();
+                *This->dsoundIface = nullptr;
+            }
+            game_free(This->dsoundIface);
+            This->dsoundIface = nullptr;
+        }
+        for (int i = 0; i < 16; ++i)
+        {
+            if (This->someHeapAllocatedSoundArray[i] != nullptr)
+            {
+                free(This->someHeapAllocatedSoundArray[i]);
+                This->someHeapAllocatedSoundArray[i] = nullptr;
+            }
+        }
+    }
+    return 0;
+}
+
+void SoundManager::waitAndStopSounds(SoundManager* This)
+{
+    DWORD waitStatus;
+    if (This->cStreamingSound)
+    {
+        This->cStreamingSound->stopSounds(This->cStreamingSound, 1);
+        if (This->threadHandle)
+        {
+            PostThreadMessageA(This->threadId, 0x12, 0, 0);
+            waitStatus = WaitForSingleObject(This->threadHandle, 0x100);
+            while (waitStatus)
+            {
+                PostThreadMessageA(This->threadId, 0x12, 0, 0);
+                waitStatus = WaitForSingleObject(This->threadHandle, 0x100);
+            }
+            CloseHandle(This->threadHandle);
+            CloseHandle((HANDLE)This->idk11);
+            This->threadHandle = (HANDLE)0x0;
+        }
+        CStreamingSound* cStreamingSnd = This->cStreamingSound;
+        delete This->cStreamingSound; //TODO: NEED TO FIX CALL
+        This->cStreamingSound = nullptr;
+    }
+}
+
+int SoundManager::createThread(HWND window)
+{
+    memset(&g_soundManager, 0, sizeof(SoundManager)); // 0x52f4
+    g_soundManager.hwnd2 = window;
+    g_soundManager.soundThread = CreateThread(
+        NULL,
+        0,
+        loadSoundsSubroutine,
+        &g_soundManager,
+        0,
+        &g_soundManager.soundThreadId);
+    return 0;
+}
+
+void SoundManager::initialize(SoundManager* This, HWND gameWindow)
+{
+#if 0
+    for (int i = 0; i < 0x80; i++)
+        This->m_soundBufferIndices[i] = -1;
+
+    for (int i = 0; i < 12; i++)
+        This->m_sfxSlots[i] = -1;
+
+    IDirectSound8** pDSound = (IDirectSound8**)game_new(sizeof(IDirectSound8*));
+    if (pDSound != nullptr)
+        *pDSound = nullptr;
+
+    This->dsoundIface = pDSound;
+
+    if (*pDSound != nullptr)
+    {
+        (*pDSound)->Release();
+        *pDSound = nullptr;
+    }
+
+    HRESULT hr = DirectSoundCreate8(nullptr, pDSound, nullptr);
+    if (FAILED(hr) || FAILED((*pDSound)->SetCooperativeLevel(gameWindow, DSSCL_PRIORITY)))
+    {
+
+        puts("DirectSound オブジェクトの初期化が失敗したよ\n");
+
+        if (This->dsoundIface != nullptr)
+        {
+            if (*This->dsoundIface != nullptr)
+            {
+                (*This->dsoundIface)->Release();
+                *This->dsoundIface = nullptr;
+            }
+            free(This->dsoundIface);
+            This->dsoundIface = nullptr;
+        }
+        return;
+    }
+
+    directSoundBufferDescStuff(pDSound);
+    This->dsound = *This->dsoundIface;
+
+    // Set up standard 44.1kHz, 16-bit, Stereo PCM Wave Format
+    WAVEFORMATEX waveFormat = { 0 };
+    waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+    waveFormat.nChannels = 2;
+    waveFormat.nSamplesPerSec = 44100;
+    waveFormat.nAvgBytesPerSec = 176400;
+    waveFormat.nBlockAlign = 4;
+    waveFormat.wBitsPerSample = 16;
+    waveFormat.cbSize = 0;
+
+    DSBUFFERDESC dSoundBufferDesc = { 0 };
+    dSoundBufferDesc.dwSize = sizeof(DSBUFFERDESC); // 0x24
+    dSoundBufferDesc.dwFlags = DSBCAPS_CTRLVOLUME | DSBCAPS_GLOBALFOCUS; // 0x8008
+    dSoundBufferDesc.dwBufferBytes = 0x8000;
+    dSoundBufferDesc.lpwfxFormat = &waveFormat;
+
+    This->threadHandle = nullptr;
+
+    hr = This->dsound->CreateSoundBuffer(&dSoundBufferDesc, &This->dSoundBuffer, nullptr);
+    if (SUCCEEDED(hr))
+    {
+        LPVOID audioPtr1 = nullptr;
+        DWORD audioBytes1 = 0;
+        LPVOID audioPtr2 = nullptr;
+        DWORD audioBytes2 = 0;
+
+        hr = This->dSoundBuffer->Lock(0, 0x8000, &audioPtr1, &audioBytes1, &audioPtr2, &audioBytes2, 0);
+        if (SUCCEEDED(hr))
+        {
+            // Zero out the buffer to prevent garbage noise, then unlock
+            memset(audioPtr1, 0, 0x8000);
+            This->dSoundBuffer->Unlock(audioPtr1, audioBytes1, audioPtr2, audioBytes2);
+
+            // Play looping (1 = DSBPLAY_LOOPING)
+            This->dSoundBuffer->Play(0, 0, DSBPLAY_LOOPING);
+
+            This->bgmVolume = 100;
+            This->sfxVolume = 100;
+            This->hwnd = gameWindow;
+
+            // Set up a 250ms window timer
+            SetTimer(gameWindow, 0, 250, nullptr);
+
+            // Load individual sound files
+            int soundIndex = 0;
+            while (g_soundManager.someState != 2)
+            {
+                int loadResult = loadSoundByFilename(&g_soundManager, This->dSoundBuffer, soundIndex, g_soundFiles[soundIndex]);
+
+                if (loadResult != 0)
+                {
+                    printf("Sound ファイルが読み込めない データを確認 %s\n", g_soundFiles[soundIndex]);
+                    return;
+                }
+
+                soundIndex++;
+
+                // Break once all 46 files are loaded
+                if (soundIndex > 46)
+                {
+                    puts("DirectSound は正常に初期化されました\n");
+                    break;
+                }
+            }
+        }
+    }
+#endif
+}

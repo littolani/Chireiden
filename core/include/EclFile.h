@@ -1,5 +1,6 @@
 #pragma once
 #include "Chireiden.h"
+#include "EclInstruction.h"
 #include "Macros.h"
 
 struct EclFileHeader
@@ -21,18 +22,6 @@ struct EclFile
 {
     EclFileHeader header;
     LPBYTE bytes;
-};
-
-struct EclInstruction
-{
-    int32_t time;            // 0x0
-    int16_t opcode;          // 0x4
-    uint16_t offsetToNext;   // 0x6
-    uint16_t paramMask;      // 0x8
-    uint8_t difficultyMask;  // 0xa
-    uint8_t paramCount;      // 0xb
-    uint32_t dummy;          // 0xc
-    unsigned char args[];    // 0x10
 };
 
 struct EclSubroutineRef

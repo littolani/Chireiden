@@ -15,34 +15,24 @@ ChainCallbackResult Bomb::onTick(Bomb* This)
     int result = 0;
     switch (g_globals.character)
     {
-    case CharacterId::Reimu:
-        switch (g_globals.subshot)
-        {
-        case SubshotId::TypeA:
-            result = onTickReimuA(This);
-            break;
-        case SubshotId::TypeB:
-            result = onTickReimuB(This);
-            break;
-        case SubshotId::TypeC:
-            result = onTickReimuC(This);
-            break;
-        }
+    case Character::ReimuA:
+        result = onTickReimuA(This);
+        break;
+    case Character::ReimuB:
+        result = onTickReimuB(This);
+        break;
+    case Character::ReimuC:
+        result = onTickReimuC(This);
         break;
 
-    case CharacterId::Marisa:
-        switch (g_globals.subshot)
-        {
-        case SubshotId::TypeA:
-            result = onTickMarisaA(This);
-            break;
-        case SubshotId::TypeB:
-            result = onTickMarisaB(This);
-            break;
-        case SubshotId::TypeC:
-            result = onTickMarisaC(This);
-            break;
-        }
+    case Character::MarisaA:
+        result = onTickMarisaA(This);
+        break;
+    case Character::MarisaB:
+        result = onTickMarisaB(This);
+        break;
+    case Character::MarisaC:
+        result = onTickMarisaC(This);
         break;
     }
 
@@ -61,7 +51,7 @@ ChainCallbackResult Bomb::onTick(Bomb* This)
 
 int Bomb::onTickReimuA(Bomb* This)
 {
-    AnmVm* vm = g_anmManager->getVmWithId(g_anmManager, (This->vmId).id);
+    AnmVm* vm = g_anmManager->getVmById(g_anmManager, (This->vmId).id);
     if (!vm)
     {
         This->vmId.id = 0;
