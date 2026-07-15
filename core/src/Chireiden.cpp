@@ -226,7 +226,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
 
         installHook(0x446ae0, createLtoThunk<EAX, EBX>(Window::initialize, 0));
 
-        installHook(0x430290, createLtoThunk<Void, Stack<4>>(Player::move, 4));
+        // installHook(0x430290, createLtoThunk<Void, Stack<4>>(Player::move, 4));
+        installHook(0x432cc0, createLtoThunk<Void, EBX>(Player::repopulateAbilities, 0));
+
         // installHook(0x4461f0, createLtoThunk<Void, ESI>(Window::update, 0));
 
         // Globals

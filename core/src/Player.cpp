@@ -11,8 +11,8 @@
 #include "SoundManager.h"
 #include "Spellcard.h"
 #include "Shottypes.h"
-#include <GeneratedSymbols.h>
-#include <Vectors.h>
+#include "GeneratedSymbols.h"
+#include "Vectors.h"
 
 int Player::shootOneBullet(Player* This, Float3* position, int currentTime, Shooter* shooter)
 {
@@ -958,9 +958,8 @@ void Player::repopulateAbilities(Player* This)
 ResetFlags:
     This->reimu_c_flag_probably_0x7c90 = powerLevel;
 
-    for (int i = 0; i < 8; ++i) {
+    for (int i = 0; i < 8; ++i)
         This->playerAbilities[i].resetFlag = 1;
-    }
 }
 
 void Player::shoot(Player* This, int currentTime)
