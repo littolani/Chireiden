@@ -76,19 +76,7 @@ game_drawVmWithTextureTransform(This, vm);
 ```
 ## Hooking Global Variables
 
-Global variables are mapped in `symbols.asm`. To access a global game variable in C++:
-
-1. Declare it in `Globals.h` using `extern "C"`.
-2. Define its address in `symbols.asm` (note the leading underscore for the symbol name).
-
-```cpp
-extern "C" Supervisor g_supervisor;
-```
-
-```assembly
-PUBLIC _g_supervisor
-_g_supervisor EQU 04c3280h
-```
+Global variables are mapped in globals.csv`. After declaring any new global variables, update intellisense by running `python ./scripts/GenerateHeaders.py`.
 
 ## VM Architecture & Debugging
 
