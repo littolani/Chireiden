@@ -37,33 +37,37 @@ struct PlayerBullet
 
 struct PlayerAbility
 {
-    int unk0[7];                    // <0x0>
-    float targetAngleUnfocused;     // <0x1c>
-    float targetDistanceUnfocused;  // <0x20>
-    float targetAngleFocused;       // <0x24>
-    float targetDistanceFocused;    // <0x28>
-    int unk2;                       // <0x2c>
-    float someAngleFloat;           // <0x30>
-    int unk3[5];                    // <0x34> 
-    AnmId anotherAnmId;             // <0x48>
-    int unk4;                       // <0x4c>
-    Int2 currentPosSubpixel;        // <0x54>
-    Int2 previousPosSubpixel;       // <0x5c>
-    int g;
-    Int2 targetOffsetsUnfocused;
-    Int2 targetOffsetsFocused;
+    int anmSlotIndexMaybe;                     // <0x00>
+    int unk0[6];                               // <0x04>
+    float targetAngleUnfocused;                // <0x1c>
+    float targetDistanceUnfocused;             // <0x20>
+    float targetAngleFocused;                  // <0x24>
+    float targetDistanceFocused;               // <0x28>
+    int unk2;                                  // <0x2c>
+    float someAngleFloat;                      // <0x30>
+    int unk3[5];                               // <0x34> 
+    AnmId anotherAnmId;                        // <0x48>
+    int unk4;                                  // <0x4c>
+    Int2 currentPosSubpixel;                   // <0x50>
+    Int2 previousPosSubpixel;                  // <0x58>
+    int g;                                     // <0x60>
+    Int2 targetOffsetsUnfocused;               // <0x64>
+    Int2 targetOffsetsFocused;                 // <0x6c>
     Int2 marisaBPreferredOffsetsByFormtion[5];
     int idk5[3];
     float angle;
     int idk6;
     AnmId anmIds[2];
-    int idk7[4];
+    int e;
+    int d;
+    int c;
+    int b;
     Float2 someOtherFloat;
     int optionId;
     int resetFlag;
     int idk8;
-    void(*update)(PlayerAbility*);
-    void* someDrawCallback;
+    void(*updateCallback)(PlayerAbility*);
+    void(*drawCallback)(PlayerAbility*);
 };
 ASSERT_SIZE(PlayerAbility, 0xe4);
 
@@ -160,17 +164,6 @@ public:
     // 0x431c70
     static int loadShotFile(Player* This, const char* filename);
 
-    // 0x4336a0
-    static void optionCallbackReimuA(Player* This);
-
-    // 0x4337b0
-    static void optionCallbackReimuC(Player* This);
-
-    static int optionCallbackReimuB(Player* This);
-    static int optionCallbackMarisaA(Player* This);
-    static int optionCallbackMarisaB(Player* This);
-    static int optionCallbackMarisaC(Player* This);
-
     // 0x430290
     static void move(Player* This);
 
@@ -220,12 +213,14 @@ public:
         return ChainCallbackResult::Continue; //onTick(reinterpret_cast<Player*>(This));
     }
 
-    static void optionCallbackReimuA(PlayerAbility* ability);
-    static void optionCallbackReimuB(PlayerAbility* ability);
-    static void optionCallbackReimuC(PlayerAbility* ability);
-    static void optionCallbackMarisaA(PlayerAbility* ability);
-    static void optionCallbackMarisaB(PlayerAbility* ability);
-    static void optionCallbackMarisaC(PlayerAbility* ability);
+    // 0x4336a0
+    static void abilityDrawCallbackReimuA(PlayerAbility* ability);
+
+    static void abilityCallbackReimuB(PlayerAbility* ability);
+    static void abilityCallbackReimuC(PlayerAbility* ability);
+    static void abilityCallbackMarisaA(PlayerAbility* ability);
+    static void abilityCallbackMarisaB(PlayerAbility* ability);
+    static void abilityCallbackMarisaC(PlayerAbility* ability);
 
 };
 ASSERT_SIZE(Player, 0x8d24);

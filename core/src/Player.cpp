@@ -398,7 +398,7 @@ void Player::move(Player* This)
 
     // Character Specific Ticks
     if (charType == Character::ReimuA)
-        reimuATickGappingState(This);
+        reimuATickGappingState(This); // Verified
 
     // Reimu B Auto-collect
     else if (charType == Character::ReimuB)
@@ -456,16 +456,14 @@ void Player::move(Player* This)
     }
 
     // Marisa B Formations Update
-    // Assuming UI check skipped / substituted here if missing gui references
-    //FIXME: GUI STUFF
-    if (charType == 4 /* && g_gui->field2_0x4350[0x3a] == 0 */)
+    if (charType == 4 && !g_gui->playerRelatedValue)
     {
         if ((g_inputManager.idk3 & 0x400) != 0) { // Typical button release / transition state check
             This->marisaB_Formation = (This->marisaB_Formation + 1) % 5;
             
             if (This->reimu_c_flag_probably_0x7c90 > 0) {
                 for (int i = 0; i < This->reimu_c_flag_probably_0x7c90; ++i) {
-                    // setSomeVmFlagsViaAnmId(This->playerAbilities[i].anotherAnmId.id); (If exported)
+                    // setSomeVmFlagsViaAnmId(This->playerAbilities[i].anotherAnmId.id); ???
                     This->playerAbilities[i].anotherAnmId.id = 0;
                     AnmManager::makeVmWithAnmLoaded(This->playerAnm, This->marisaB_Formation + 0x22, 11, &This->playerAbilities[i].anotherAnmId);
                 }
@@ -497,8 +495,8 @@ void Player::move(Player* This)
                 ability->currentPosSubpixel.x = This->posSubpixel.x + targetOffset->x;
                 ability->currentPosSubpixel.y = This->posSubpixel.y + targetOffset->y;
 
-                if (ability->update != nullptr)
-                    ability->update(ability);
+                if (ability->drawCallback != nullptr)
+                    ability->drawCallback(ability);
 
                 if (ability->resetFlag == 0) {
                     int percent = This->percentMovedByOptions;
@@ -788,7 +786,6 @@ void Player::repopulateAbilities(Player* This)
     int characterShotType = static_cast<int>(g_globals.subshot) + static_cast<int>(g_globals.character) * 3;
     int powerLevel = g_globals.currentPower / g_globals.powerPerLevel;
 
-    // Handle Max Power Auras
     if (g_globals.currentPower >= g_globals.maxPower)
     {
         if (powerLevel > 0)
@@ -797,9 +794,9 @@ void Player::repopulateAbilities(Player* This)
             {
                 PlayerAbility& ability = This->playerAbilities[i];
 
-                if (ability.anmIds[0].id != 0)
+                if (ability.anmIds[1].id != 0)
                 {
-                    AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[0].id);
+                    AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[1].id);
                     if (vm)
                     {
                         vm->m_flagsLow |= 0x4000000;
@@ -810,33 +807,40 @@ void Player::repopulateAbilities(Player* This)
                         }
                     }
                 }
-                ability.anmIds[0].id = 0;
+                ability.anmIds[1].id = 0;
 
                 int scriptIndex = 0;
-                switch (g_globals.character)
+                switch (characterShotType)
                 {
                 case Character::ReimuA:
                     scriptIndex = 0x17;
+                    ability.anmSlotIndexMaybe = This->playerAnm->m_anmSlotIndex;
                     break;
                 case Character::ReimuB:
                     scriptIndex = 0x18;
+                    ability.anmSlotIndexMaybe = This->playerAnm->m_anmSlotIndex;
                     break;
                 case Character::ReimuC:
                     scriptIndex = 0x19;
+                    // something else here??
+                    // ability.anmSlotIndexMaybe = characterShotType?
                     break;
                 case Character::MarisaA:
                     scriptIndex = 0x28;
+                    ability.anmSlotIndexMaybe = This->playerAnm->m_anmSlotIndex;
                     break;
                 case Character::MarisaB:
                     scriptIndex = 0x29;
+                    ability.anmSlotIndexMaybe = This->playerAnm->m_anmSlotIndex;
                     break;
                 case Character::MarisaC:
                     scriptIndex = 0x2a;
+                    ability.anmSlotIndexMaybe = This->playerAnm->m_anmSlotIndex;
                     break;
                 }
 
                 if (scriptIndex != 0)
-                    AnmManager::loadAnmScriptAndAddToList(This->playerAnm, scriptIndex, 11, &ability.anmIds[0]);
+                    AnmManager::loadAnmScriptAndAddToList(This->playerAnm, scriptIndex, 11, &ability.anmIds[1]);
             }
         }
     }
@@ -846,9 +850,9 @@ void Player::repopulateAbilities(Player* This)
         for (int i = 0; i < 8; ++i)
         {
             PlayerAbility& ability = This->playerAbilities[i];
-            if (ability.anmIds[0].id != 0)
+            if (ability.anmIds[1].id != 0)
             {
-                AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[0].id);
+                AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[1].id);
                 if (vm)
                 {
                     vm->m_pendingInterrupt = 1;
@@ -859,9 +863,14 @@ void Player::repopulateAbilities(Player* This)
                     }
                 }
             }
-            ability.anmIds[0].id = 0;
         }
     }
+
+    if (This->reimu_c_flag_probably_0x7c90 == 0)
+        This->reimuCOptionAngle = normalizeAngle(0.0f);
+
+    if (powerLevel == This->reimu_c_flag_probably_0x7c90)
+        return;
 
     if (powerLevel <= 0)
         goto ResetFlags;
@@ -870,7 +879,7 @@ void Player::repopulateAbilities(Player* This)
     {
         PlayerAbility& ability = This->playerAbilities[i];
 
-        ability.unk0[0] = 2; // Translated from playerOption_int2_64_y[-0x1a] = 2
+        ability.anmSlotIndexMaybe = 2; // Translated from playerOption_int2_64_y[-0x1a] = 2
 
         // NEED TO VERIFY
         int dataIndex = g_optionFormationOffsets[characterShotType][powerLevel - 1] + i;
@@ -888,9 +897,8 @@ void Player::repopulateAbilities(Player* This)
         ability.targetOffsetsFocused.y = ability.targetDistanceFocused * 128.0f;
 
         Int2* targetOffsets = &ability.targetOffsetsFocused;
-        if (This->isFocused == 0) {
+        if (This->isFocused == 0)
             targetOffsets = &ability.targetOffsetsUnfocused;
-        }
 
         int targetX = This->posSubpixel.x + targetOffsets->x;
         int targetY = This->posSubpixel.y + targetOffsets->y;
@@ -899,40 +907,49 @@ void Player::repopulateAbilities(Player* This)
         ability.currentPosSubpixel.y = targetY;
         ability.previousPosSubpixel.x = targetX;
         ability.previousPosSubpixel.y = targetY;
-
         ability.optionId = i;
-        ability.anmIds[1].id = 0;
+        
+        if (ability.anmIds[0].id != 0) {
+            AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[0].id);
+            if (vm) {
+                vm->m_flagsLow |= 0x4000000;
+                if (vm->m_familyListNode.prev == nullptr)
+                    for (AnmVmListNode* child = vm->m_familyListNode.next; child; child = child->next)
+                        child->entry->m_flagsLow |= 0x4000000;
+            }
+        }
+        ability.anmIds[0].id = 0;
 
-        //switch (g_globals.character)
         switch (g_globals.subshot + g_globals.character * 3)
         {
         case Character::ReimuA:
-            ability.update = optionCallbackReimuA; // 0x433690
+            // ability.drawCallback = reinterpret_cast<void(*)(PlayerAbility*)>(0x4336a0); // REPLACE LATER
+            ability.updateCallback = reinterpret_cast<void(*)(PlayerAbility*)>(0x433690);
             ability.someAngleFloat = -D3DX_PI / 2;
             ability.angle = normalizeAngle((i * 2 * D3DX_PI) / (float)powerLevel - D3DX_PI / 2);
-            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x14, 11, &ability.anotherAnmId);
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x14, 11, &ability.anmIds[0]);
             break;
 
         case Character::ReimuB:
-            ability.update = optionCallbackReimuB; // 0x4337b0
-            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x15, 11, &ability.anotherAnmId);
+            //ability.updateCallback = abilityCallbackReimuB; // 0x4337b0
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x15, 11, &ability.anmIds[0]);
             break;
 
         case Character::ReimuC:
-            ability.update = optionCallbackReimuC;
-            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x16, 11, &ability.anotherAnmId);
+            //ability.updateCallback = abilityCallbackReimuC;
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x16, 11, &ability.anmIds[0]);
             break;
 
         case Character::MarisaA:
-            ability.update = optionCallbackMarisaA; // 0x433990
+            ability.updateCallback = abilityCallbackMarisaA; // 0x433990
             {
-                int scriptNumber = g_optionFormationOffsets[5][i + powerLevel * 8 + 8] + 0x15;
-                AnmManager::makeVmWithAnmLoaded(This->playerAnm, scriptNumber, 11, &ability.anotherAnmId);
+                int scriptNumber = g_optionFormationOffsets[5][i + powerLevel * 8 + 8] + 0x15; // THIS CAN READ OUTSIDE THE BOUNDS
+                AnmManager::makeVmWithAnmLoaded(This->playerAnm, scriptNumber, 11, &ability.anmIds[0]);
             }
             break;
 
         case Character::MarisaB:
-            // Marisa B pulls from extra coordinate pools to switch between formations
+            // Marisa B pulls from extra coordinate pools to switch between formations?
             ability.marisaBPreferredOffsetsByFormtion[0].x = This->shotFile->unfocusedPool.coords[dataIndex].x * 128.0f;
             ability.marisaBPreferredOffsetsByFormtion[0].y = This->shotFile->unfocusedPool.coords[dataIndex].y * 128.0f;
             ability.marisaBPreferredOffsetsByFormtion[1].x = This->shotFile->focusedPool.coords[dataIndex].x * 128.0f;
@@ -944,20 +961,36 @@ void Player::repopulateAbilities(Player* This)
             ability.marisaBPreferredOffsetsByFormtion[4].x = This->shotFile->unknownPool3.coords[dataIndex].x * 128.0f;
             ability.marisaBPreferredOffsetsByFormtion[4].y = This->shotFile->unknownPool3.coords[dataIndex].y * 128.0f;
 
-            ability.update = optionCallbackMarisaB; // 0x433a50
-            AnmManager::makeVmWithAnmLoaded(This->playerAnm, This->marisaB_Formation + 0x22, 11, &ability.anotherAnmId);
+            //ability.updateCallback = abilityCallbackMarisaB; // 0x433a50
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, This->marisaB_Formation + 0x22, 11, &ability.anmIds[0]);
             break;
 
         case Character::MarisaC:
-            ability.update = optionCallbackMarisaC; // 0x433b20
-            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x27, 11, &ability.anotherAnmId);
+            //ability.updateCallback = abilityCallbackMarisaC; // 0x433b20
+            AnmManager::makeVmWithAnmLoaded(This->playerAnm, 0x27, 11, &ability.anmIds[0]);
             break;
         }
     }
 
 ResetFlags:
     This->reimu_c_flag_probably_0x7c90 = powerLevel;
-
+    for (int i = powerLevel; i < 8; ++i)
+    {
+        PlayerAbility& ability = This->playerAbilities[i];
+        ability.anmSlotIndexMaybe = 0;
+        if (ability.anmIds[0].id != 0)
+        {
+            AnmVm* vm = AnmManager::getVmById(g_anmManager, ability.anmIds[0].id);
+            if (vm)
+            {
+                vm->m_pendingInterrupt = 1;
+                if (vm->m_familyListNode.prev == nullptr)
+                    for (AnmVmListNode* child = vm->m_familyListNode.next; child; child = child->next)
+                        child->entry->m_pendingInterrupt = 1;
+            }
+        }
+    }
+    
     for (int i = 0; i < 8; ++i)
         This->playerAbilities[i].resetFlag = 1;
 }
@@ -966,7 +999,7 @@ void Player::shoot(Player* This, int currentTime)
 {
 }
 
-void Player::optionCallbackReimuA(PlayerAbility* ability)
+void Player::abilityDrawCallbackReimuA(PlayerAbility* ability)
 {
     Float2 outVec;
     float orbitRadius = g_player->isFocused ? 24.0f : 64.0f;
@@ -999,27 +1032,27 @@ void Player::optionCallbackReimuA(PlayerAbility* ability)
     ability->idk8 = ability->idk8 & 0xfffffffe;
 }
 
-void Player::optionCallbackReimuB(PlayerAbility* ability)
+void Player::abilityCallbackReimuB(PlayerAbility* ability)
 {
     
 }
 
-void Player::optionCallbackReimuC(PlayerAbility* ability)
+void Player::abilityCallbackReimuC(PlayerAbility* ability)
 {
     
 }
 
-void Player::optionCallbackMarisaA(PlayerAbility* ability)
+void Player::abilityCallbackMarisaA(PlayerAbility* ability)
 {
     
 }
 
-void Player::optionCallbackMarisaB(PlayerAbility* ability)
+void Player::abilityCallbackMarisaB(PlayerAbility* ability)
 {
     
 }
 
-void Player::optionCallbackMarisaC(PlayerAbility* ability)
+void Player::abilityCallbackMarisaC(PlayerAbility* ability)
 {
     
 }
@@ -1035,7 +1068,7 @@ void Player::reimuATickGappingState(Player* This)
     if (This->reimuAGappingState <= 98)
     {
         bool holdingShootOrFocus = (g_inputManager.currentKeysDown & (InputBits::SHOOT | InputBits::FOCUS)) != 0;
-        bool isDialogActive = (g_gui->playerRelatedValue != 0);
+        bool isDialogActive = g_gui->playerRelatedValue != 0;
         bool bossIndicatorMissing = (g_enemyManager != nullptr && g_enemyManager->someIndicator == 0);
 
         if (holdingShootOrFocus || isDialogActive || bossIndicatorMissing)
