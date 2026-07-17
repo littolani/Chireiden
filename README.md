@@ -76,7 +76,7 @@ game_drawVmWithTextureTransform(This, vm);
 ```
 ## Hooking Global Variables
 
-Global variables are mapped in globals.csv`. After declaring any new global variables, update intellisense by running `python ./scripts/GenerateHeaders.py`.
+Global variables are mapped in `globals.csv`. After declaring any new global variables, update intellisense by running `python ./scripts/GenerateHeaders.py`.
 
 ## VM Architecture & Debugging
 
