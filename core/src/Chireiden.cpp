@@ -16,6 +16,7 @@
 #include "SoundManager.h"
 #include "LaserLine.h"
 #include <conio.h>
+#include <winbase.h>
 
 typedef IDirect3D9* (WINAPI* Direct3DCreate9_t)(UINT SDKVersion);
 Direct3DCreate9_t Real_Direct3DCreate9 = nullptr;
@@ -135,6 +136,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
     if (fdwReason == DLL_PROCESS_ATTACH)
     {
         setupConsole();
+
+        installHook(0x445510, createLtoThunk<EAX, Stack<0x4>, Stack<0x8>, Stack<0xc>, Stack<0x10>>(WinMain, 0x10));
 
         installHook(0x4540f0, createLtoThunk<Void, ESI>(AnmLoadedD3D::createTextureFromAtR, 0));
 

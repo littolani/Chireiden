@@ -239,16 +239,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
     g_supervisor.flags |= 0x8000;
     for (int i = 0; i < 12; ++i)
-    {
         InitializeCriticalSection(&g_supervisor.criticalSections[i]);
-    }
 
     puts("---------- Touhou 11 Startup Log ----------\n");
 
     g_app = CreateMutexA(NULL, TRUE, "Touhou 11 App");
     if (GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        MessageBoxA(NULL, "二つは起動できません\n", "エラー", MB_OK | MB_ICONERROR);
+        MessageBoxW(NULL, L"二つは起動できません\n", L"エラー", MB_OK | MB_ICONERROR);
         goto AppCleanup;
     }
 
@@ -285,11 +283,35 @@ RestartEngine:
             g_anmManager = nullptr;
         }
 
-        if (g_supervisor.surfaceR0) { g_supervisor.surfaceR0->Release(); g_supervisor.surfaceR0 = nullptr; }
-        if (g_supervisor.surfaceR1) { g_supervisor.surfaceR1->Release(); g_supervisor.surfaceR1 = nullptr; }
-        if (g_supervisor.backBuffer) { g_supervisor.backBuffer->Release(); g_supervisor.backBuffer = nullptr; }
-        if (g_supervisor.d3dDevice) { g_supervisor.d3dDevice->Release(); g_supervisor.d3dDevice = nullptr; }
-        if (g_supervisor.d3dInterface0) { g_supervisor.d3dInterface0->Release(); g_supervisor.d3dInterface0 = nullptr; }
+        if (g_supervisor.surfaceR0)
+        {
+            g_supervisor.surfaceR0->Release(); 
+            g_supervisor.surfaceR0 = nullptr;
+        }
+
+        if (g_supervisor.surfaceR1)
+        {
+            g_supervisor.surfaceR1->Release();
+            g_supervisor.surfaceR1 = nullptr;
+        }
+
+        if (g_supervisor.backBuffer)
+        {
+            g_supervisor.backBuffer->Release();
+            g_supervisor.backBuffer = nullptr;
+        }
+
+        if (g_supervisor.d3dDevice)
+        {
+            g_supervisor.d3dDevice->Release();
+            g_supervisor.d3dDevice = nullptr;
+        }
+
+        if (g_supervisor.d3dInterface0)
+        {
+            g_supervisor.d3dInterface0->Release();
+            g_supervisor.d3dInterface0 = nullptr;
+        }
 
         if (g_window.hwnd)
         {
