@@ -50,7 +50,9 @@ public:
     // 0x446ae0
     static int initialize(HINSTANCE hInstance);
 
-    static void frame(Window* This);
+    static int frame(Window* This);
+    static int frameFrameskip(Window* This);
+    static int frameIdkWhatVariationThisIs(Window* This);
     static void update(Window* This);
     static double getDeltaTime();
     static void retrieveSystemStats();

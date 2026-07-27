@@ -236,6 +236,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
     g_window.hInstance = hInstance;
     timeBeginPeriod(1);
+    int engineStatus = 2;
 
     g_supervisor.flags |= 0x8000;
     for (int i = 0; i < 12; ++i)
@@ -261,7 +262,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         BYTE keyboardBuffer[256];
         GetKeyboardState(keyboardBuffer);
 
-        // Show config dialog if configured to do so, or if Left Ctrl (0x10) is pressed?
         if ((g_supervisor.m_gameConfig.flags & 0x100) != 0 || (keyboardBuffer[VK_LCONTROL] & 0x80) != 0)
             DialogBoxParamA(hInstance, (LPCSTR)0xCB, NULL, chooseResolutionDialog, 0);
 
@@ -285,7 +285,7 @@ RestartEngine:
 
         if (g_supervisor.surfaceR0)
         {
-            g_supervisor.surfaceR0->Release(); 
+            g_supervisor.surfaceR0->Release();
             g_supervisor.surfaceR0 = nullptr;
         }
 
@@ -323,8 +323,7 @@ RestartEngine:
 
         while (ShowCursor(TRUE) < 0);
 
-        // Exit check
-        if (g_window.timeForCleanup != 2)
+        if (engineStatus != 2)
         {
             writeToFile("th11.cfg", sizeof(GameConfig), &g_supervisor.m_gameConfig);
             timeEndPeriod(1);
@@ -340,12 +339,11 @@ RestartEngine:
             return 0;
         }
 
-        puts("再起動を要するオプションが変更されたので再起動します\n");
+        puts("再起動を要するオプションが変更されたので再起動します\n"); // this shouldnt be printed when running normally
 
         if (!g_supervisor.m_d3dPresetParameters.Windowed)
             WINNLSEnableIME(NULL, TRUE);
 
-        // Flush message queue before restart
         tagMSG msg;
         for (int i = 0; i < 60; ++i)
         {
@@ -357,7 +355,6 @@ RestartEngine:
         }
         g_supervisor.flags &= ~0x180;
 
-        // Allocation and Init
         void* chainMem = game_new(sizeof(Chain));
         g_chain = chainMem ? new (chainMem) Chain() : nullptr;
 
@@ -377,7 +374,7 @@ RestartEngine:
             break;
         }
 
-        if (!g_window.initialize(hInstance))
+        if (g_window.initialize(hInstance))
             break;
 
         g_soundManager.createThread(g_window.hwnd);
@@ -385,13 +382,20 @@ RestartEngine:
         if (g_supervisor.initD3d9Devices(D3DFMT_UNKNOWN) != 0)
             continue;
 
-        void* anmMem = game_malloc(sizeof(AnmManager));
+        AnmManager* anmMem = (AnmManager*)game_malloc(sizeof(AnmManager));
         if (!anmMem)
         {
             printf("Failed to allocate AnmManager!\n");
             exit(1);
         }
-        g_anmManager = AnmManager::initialize((AnmManager*)anmMem);
+
+        //using AnmManager_initialize_sto = Storage<EAX, Stack<0x4>>;
+        //using AnmManager_initialize_sig = Signature<AnmManager*, AnmManager*>;
+        //static auto AnmManager_initialize = createCustomCallingConvention<AnmManager_initialize_sto, AnmManager_initialize_sig>(0x4526f0);
+        //
+        //g_anmManager = AnmManager_initialize(anmMem);
+        //g_anmManager = AnmManager::initialize(anmMem);
+        
 
         if (!g_supervisor.m_d3dPresetParameters.Windowed)
         {
@@ -408,7 +412,17 @@ RestartEngine:
         g_window.deltaTime = g_window.timeSinceLastFrame;
 
         SetForegroundWindow(g_window.hwnd);
-        g_supervisor.initialize();
+
+        // Overwrites the `2` status with the actual init result
+        engineStatus = g_supervisor.initialize();
+        if (engineStatus != 0)
+        {
+            if (engineStatus == -1)
+                goto EngineCleanup;
+
+            engineStatus = 2;
+            goto EngineCleanup;
+        }
 
         g_window.someFlag2 |= 1;
         g_window.timeForCleanup = 0;
@@ -435,14 +449,14 @@ RestartEngine:
                     if ((g_window.someFlag2 & 0x10) == 0)
                     {
                         if (g_supervisor.m_d3dPresetParameters.PresentationInterval == 1 && g_supervisor.m_gameConfig.frameSkip == 0) {
-                            // Window::frameIdkWhatVariationThisIs(&g_window);
+                            engineStatus = g_window.frameIdkWhatVariationThisIs(&g_window);
                         }
                         else {
-                            // Window::frameFrameskip(&g_window);
+                            engineStatus = g_window.frameFrameskip(&g_window);
                         }
                     }
                     else
-                        Window::frame(&g_window);
+                        engineStatus = g_window.frame(&g_window);
 
                     if (g_window.timeForCleanup != 0)
                         break;
@@ -530,7 +544,7 @@ RestartEngine:
                     }
                 }
                 g_supervisor.setupCameras(&g_supervisor);
-                g_window.someFlag2 &= ~2; // Clear device lost flag
+                g_window.someFlag2 &= ~2;
             }
         }
 
@@ -545,7 +559,7 @@ RestartEngine:
 
         if (g_chain)
         {
-            Supervisor::releaseChains(); // or g_chain->release();
+            Supervisor::releaseChains();
             game_free(g_chain);
             g_chain = nullptr;
         }

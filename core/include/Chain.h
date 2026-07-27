@@ -87,8 +87,14 @@ struct Chain
      */
     static int runDrawChain();
 
-    
-    static int registerCalcChain(Chain* This, ChainElem* chainElem, int priority);
+    /**
+     * 0x456b70
+     * @brief
+     * @param  chainElem  ESI:4
+     * @param  priority   EBX:4
+     * @return int        EAX:4
+     */
+    static int registerCalcChain(ChainElem* chainElem, int priority);
 
     /**
      * 0x456c10

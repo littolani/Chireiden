@@ -5,7 +5,7 @@
 
 AnmManager* AnmManager::initialize(AnmManager* This)
 {
-    memset(This, 0, sizeof(AnmManager));
+    //memset(This, 0, sizeof(AnmManager));
 
     This->m_primaryVm = AnmVm();
     for (int i = 0; i < 4096; ++i)
@@ -28,7 +28,8 @@ AnmManager* AnmManager::initialize(AnmManager* This)
     for (int i = 0; i < 4; i++)
         This->m_blitParamsArray[i].anmLoadedIndex = -1;
 
-    auto addChain = [&](int priority, ChainCallback callback, bool isCalcChain) -> void {
+    auto addChain = [&](int priority, ChainCallback callback, bool isCalcChain) -> void
+    {
         ChainElem* elem = (ChainElem*)game_new(sizeof(ChainElem));
         elem->nextNode = (ChainElem*)((uintptr_t)elem->nextNode | 3);
         elem->jobRunDrawChainCallback = callback;
@@ -37,40 +38,52 @@ AnmManager* AnmManager::initialize(AnmManager* This)
         elem->runCalcChainCallback = nullptr;
 
         if (isCalcChain)
-            g_chain->registerCalcChain(g_chain, elem, priority);
+        {
+            using sto = Storage<EAX, ESI, EBX>;
+            using sig = Signature<int, ChainElem*, int>;
+            static auto registerCalcChain = createCustomCallingConvention<sto, sig>(0x456b70);
+            registerCalcChain(elem, priority);
+            // g_chain->registerCalcChain(elem, priority);
+        }
         else
-            g_chain->registerDrawChain(elem, priority);
+        {
+            using sto = Storage<EAX, ESI, EBX>;
+            using sig = Signature<int, ChainElem*, int>;
+            static auto registerDrawChain = createCustomCallingConvention<sto, sig>(0x456c10);
+            registerDrawChain(elem, priority);
+            // g_chain->registerDrawChain(elem, priority);
+        }
     };
 
-    addChain(0x1a, onTick1a, true);
-    addChain(0x08, onTick08, true);
-    addChain(0x04, on_draw_04_just_renders_layer_00, false);
-    addChain(0x06, on_draw_06_just_renders_layer_01, false);
-    addChain(0x08, on_draw_08_just_renders_layer_02, false);
-    addChain(0x0a, on_draw_0a_also_renders_layer_03, false);
-    addChain(0x0c, on_draw_0c_just_renders_layer_04, false);
-    addChain(0x0f, on_draw_0f_just_renders_layer_05, false);
-    addChain(0x10, on_draw_10_just_renders_layer_06, false);
-    addChain(0x11, on_draw_11_just_renders_layer_07, false);
-    addChain(0x12, on_draw_12_just_renders_layer_08, false);
-    addChain(0x13, on_draw_13_just_renders_layer_09, false);
-    addChain(0x14, on_draw_15_just_renders_layer_10, false);
-    addChain(0x17, on_draw_17_just_renders_layer_11, false);
-    addChain(0x18, on_draw_18_just_renders_layer_12, false);
-    addChain(0x1a, on_draw_1a_just_renders_layer_13, false);
-    addChain(0x1c, on_draw_1c_just_renders_layer_14, false);
-    addChain(0x20, on_draw_20_just_renders_layer_15, false);
-    addChain(0x22, on_draw_22_just_renders_layer_16, false);
-    addChain(0x24, on_draw_24_just_renders_layer_17, false);
-    addChain(0x27, on_draw_27_just_renders_layer_18, false);
-    addChain(0x28, on_draw_28_also_renders_layer_19, false);
-    addChain(0x32, on_draw_32_just_renders_layer_22, false);
-    addChain(0x3c, on_draw_3c_just_renders_layer_23, false);
-    addChain(0x3d, on_draw_3d_just_renders_layer_24, false);
-    addChain(0x31, on_draw_31_just_renders_layer_21, false);
-    addChain(0x30, on_draw_30_also_renders_layer_20, false);
-    addChain(0x3f, on_draw_3f_also_renders_layer_29, false);
-    addChain(0x3e, on_draw_3e_also_renders_layer_30, false);
+    addChain(0x1a, reinterpret_cast<ChainCallback>(0x455480)/*onTick1a*/, true);
+    addChain(0x08, reinterpret_cast<ChainCallback>(0x455560)/*onTick08*/, true);
+    addChain(0x04, reinterpret_cast<ChainCallback>(0x455140)/*on_draw_04_just_renders_layer_00*/, false);
+    addChain(0x06, reinterpret_cast<ChainCallback>(0x455150)/*on_draw_06_just_renders_layer_01*/, false);
+    addChain(0x08, reinterpret_cast<ChainCallback>(0x455160)/*on_draw_08_just_renders_layer_02*/, false);
+    addChain(0x0a, reinterpret_cast<ChainCallback>(0x455170)/*on_draw_0a_also_renders_layer_03*/, false);
+    addChain(0x0c, reinterpret_cast<ChainCallback>(0x4551f0)/*on_draw_0c_just_renders_layer_04*/, false);
+    addChain(0x0f, reinterpret_cast<ChainCallback>(0x455200)/*on_draw_0f_just_renders_layer_05*/, false);
+    addChain(0x10, reinterpret_cast<ChainCallback>(0x455210)/*on_draw_10_just_renders_layer_06*/, false);
+    addChain(0x11, reinterpret_cast<ChainCallback>(0x455220)/*on_draw_11_just_renders_layer_07*/, false);
+    addChain(0x12, reinterpret_cast<ChainCallback>(0x455230)/*on_draw_12_just_renders_layer_08*/, false);
+    addChain(0x13, reinterpret_cast<ChainCallback>(0x455240)/*on_draw_13_just_renders_layer_09*/, false);
+    addChain(0x14, reinterpret_cast<ChainCallback>(0x455250)/*on_draw_15_just_renders_layer_10*/, false);
+    addChain(0x17, reinterpret_cast<ChainCallback>(0x455260)/*on_draw_17_just_renders_layer_11*/, false);
+    addChain(0x18, reinterpret_cast<ChainCallback>(0x455270)/*on_draw_18_just_renders_layer_12*/, false);
+    addChain(0x1a, reinterpret_cast<ChainCallback>(0x455280)/*on_draw_1a_just_renders_layer_13*/, false);
+    addChain(0x1c, reinterpret_cast<ChainCallback>(0x455290)/*on_draw_1c_just_renders_layer_14*/, false);
+    addChain(0x20, reinterpret_cast<ChainCallback>(0x4552a0)/*on_draw_20_just_renders_layer_15*/, false);
+    addChain(0x22, reinterpret_cast<ChainCallback>(0x4552b0)/*on_draw_22_just_renders_layer_16*/, false);
+    addChain(0x24, reinterpret_cast<ChainCallback>(0x4552c0)/*on_draw_24_just_renders_layer_17*/, false);
+    addChain(0x27, reinterpret_cast<ChainCallback>(0x4552d0)/*on_draw_27_just_renders_layer_18*/, false);
+    addChain(0x28, reinterpret_cast<ChainCallback>(0x455320)/*on_draw_28_also_renders_layer_19*/, false);
+    addChain(0x32, reinterpret_cast<ChainCallback>(0x455300)/*on_draw_32_just_renders_layer_22*/, false);
+    addChain(0x3c, reinterpret_cast<ChainCallback>(0x4552f0)/*on_draw_3c_just_renders_layer_23*/, false);
+    addChain(0x3d, reinterpret_cast<ChainCallback>(0x4552e0)/*on_draw_3d_just_renders_layer_24*/, false);
+    addChain(0x31, reinterpret_cast<ChainCallback>(0x455310)/*on_draw_31_just_renders_layer_21*/, false);
+    addChain(0x30, reinterpret_cast<ChainCallback>(0x455350)/*on_draw_30_also_renders_layer_20*/, false);
+    addChain(0x3f, reinterpret_cast<ChainCallback>(0x4553a0)/*on_draw_3f_also_renders_layer_29*/, false);
+    addChain(0x3e, reinterpret_cast<ChainCallback>(0x4553f0)/*on_draw_3e_also_renders_layer_30*/, false);
     return This;
 }
 

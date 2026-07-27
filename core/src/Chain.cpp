@@ -95,37 +95,45 @@ void Chain::removeTracker(ChainElem* tracker, ChainElem* elementToRemove)
     }
 }
 
-int Chain::registerCalcChain(Chain* This, ChainElem* chainElem, int priority)
+int Chain::registerCalcChain(ChainElem* chainElem, int priority)
 {
+    Chain* This = g_chain;
     int registerCallbackResult = 0;
+
+    // Handle registration callback
     if (chainElem->registerChainCallback != nullptr) {
-        registerCallbackResult = (*chainElem->registerChainCallback)(chainElem->args);
+        registerCallbackResult = chainElem->registerChainCallback(chainElem->args);
         chainElem->registerChainCallback = nullptr;
     }
+
     g_supervisor.enterCriticalSection(0);
 
     chainElem->jobPriority = priority;
-    //ChainElem* tracker = &g_chain->calcChain;  // Sentinel node
-    ChainElem* tracker = &This->calcChain;  // Sentinel node
-    ChainElem* trackerNext = tracker->nextNode;
 
-    while (trackerNext)
+    // Grab the embedded tracker instead of the base ChainElem
+    TrackerNode* tracker = reinterpret_cast<TrackerNode*>(&This->calcChain.embeddedTracker);
+    TrackerNode* trackerNext = tracker->next;
+
+    // Traverse the tracker linked list
+    while (trackerNext != nullptr)
     {
-        ChainElem* jobNode = trackerNext->trackerJobNode;
+        ChainElem* jobNode = trackerNext->ownerJob;
         if (jobNode->jobPriority >= priority)
             break;
+
         tracker = trackerNext;
-        trackerNext = trackerNext->nextNode;
+        trackerNext = trackerNext->next;
     }
 
-    // Use the embedded tracker node within chainElem
-    ChainElem* newTracker = reinterpret_cast<ChainElem*>(&chainElem->embeddedTracker);
-    newTracker->nextNode = tracker->nextNode; //TODO: Verify newTracker->trackerJobNode = chainElem is set elsewhere?
-    if (tracker->nextNode != nullptr)
-        tracker->nextNode->trackerPrevNode = newTracker;
+    // Link the new tracker into the list
+    TrackerNode* newTracker = reinterpret_cast<TrackerNode*>(&chainElem->embeddedTracker);
+    newTracker->next = trackerNext;
 
-    tracker->nextNode = newTracker;
-    newTracker->trackerPrevNode = tracker;
+    if (trackerNext != nullptr)
+        trackerNext->prev = newTracker;
+
+    tracker->next = newTracker;
+    newTracker->prev = tracker;
 
     g_supervisor.leaveCriticalSection(0);
     return registerCallbackResult;
