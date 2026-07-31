@@ -31,27 +31,31 @@ AnmManager* AnmManager::initialize(AnmManager* This)
     auto addChain = [&](int priority, ChainCallback callback, bool isCalcChain) -> void
     {
         ChainElem* elem = (ChainElem*)game_new(sizeof(ChainElem));
+        elem->nextNode = (ChainElem*)((uintptr_t)elem->nextNode & 0xfffffffe);
+        elem->trackerPrevNode = nullptr;
+        elem->registerChainCallback = nullptr;
+        elem->runCalcChainCallback = nullptr;
+        elem->jobPriority = 0;
+        elem->embeddedTracker.trackerJobNode = elem;
         elem->nextNode = (ChainElem*)((uintptr_t)elem->nextNode | 3);
         elem->jobRunDrawChainCallback = callback;
         elem->args = This;
-        elem->registerChainCallback = nullptr;
-        elem->runCalcChainCallback = nullptr;
 
         if (isCalcChain)
         {
-            using sto = Storage<EAX, ESI, EBX>;
-            using sig = Signature<int, ChainElem*, int>;
-            static auto registerCalcChain = createCustomCallingConvention<sto, sig>(0x456b70);
-            registerCalcChain(elem, priority);
-            // g_chain->registerCalcChain(elem, priority);
+            //using sto = Storage<EAX, ESI, EBX>;
+            //using sig = Signature<int, ChainElem*, int>;
+            //static auto registerCalcChain = createCustomCallingConvention<sto, sig>(0x456b70);
+            //registerCalcChain(elem, priority);
+             g_chain->registerCalcChain(elem, priority);
         }
         else
         {
-            using sto = Storage<EAX, ESI, EBX>;
-            using sig = Signature<int, ChainElem*, int>;
-            static auto registerDrawChain = createCustomCallingConvention<sto, sig>(0x456c10);
-            registerDrawChain(elem, priority);
-            // g_chain->registerDrawChain(elem, priority);
+            //using sto = Storage<EAX, ESI, EBX>;
+            //using sig = Signature<int, ChainElem*, int>;
+            //static auto registerDrawChain = createCustomCallingConvention<sto, sig>(0x456c10);
+            //registerDrawChain(elem, priority);
+             g_chain->registerDrawChain(elem, priority);
         }
     };
 

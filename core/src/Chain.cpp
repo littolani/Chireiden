@@ -97,6 +97,7 @@ void Chain::removeTracker(ChainElem* tracker, ChainElem* elementToRemove)
 
 int Chain::registerCalcChain(ChainElem* chainElem, int priority)
 {
+    puts("Registered calc chain\n");
     Chain* This = g_chain;
     int registerCallbackResult = 0;
 
