@@ -321,8 +321,6 @@ template <typename RetLoc, typename... ArgLocs, typename F>
 LPVOID createLtoThunk(const F& targetFunc, int retN)
 {
     LPVOID targetPtr = (LPVOID)(+targetFunc);
-    //LPVOID bad = *(LPVOID*)&targetFunc;
-    //printf("%p", bad);
     CodeEmitter e;
 
     // Prologue
@@ -335,10 +333,9 @@ LPVOID createLtoThunk(const F& targetFunc, int retN)
     if constexpr (sizeof...(ArgLocs) > 0)
         ProcessArgsReverse<ArgLocs...>(e);
 
-    // Call Target
-    e.addByte(0xB8);
-    e.addDword((uint32_t)targetPtr);
-    e.addWord(0xD0FF); // call eax
+    size_t callOffset = e.size();
+    e.addByte(0xE8); // call rel32
+    e.addDword(0);   // 32-bit placeholder
 
     // Cleanup Hook Arguments
     constexpr int realArgCount = sizeof...(ArgLocs);
@@ -375,7 +372,16 @@ LPVOID createLtoThunk(const F& targetFunc, int retN)
     else
         e.addByte(0xC3);
 
-    return e.finalize();
+    uint8_t* funcMem = (uint8_t*)e.finalize();
+
+    uint32_t currentIP = (uint32_t)funcMem + callOffset;
+    uint32_t relativeOffset = (uint32_t)targetPtr - (currentIP + 5);
+
+    *(uint32_t*)(funcMem + callOffset + 1) = relativeOffset;
+
+    FlushInstructionCache(GetCurrentProcess(), funcMem + callOffset + 1, sizeof(uint32_t));
+
+    return (LPVOID)funcMem;
 }
 
 // Container for the mapping layout
@@ -460,18 +466,20 @@ struct ThunkGenerator<Storage<RetLoc, ArgLocs...>, Signature<RetType, ArgTypes..
             e, std::make_index_sequence<sizeof...(ArgTypes)>{}
         );
 
-        // Call
-        e.addByte(0xB8); e.addDword(originalFuncAddress); // mov eax, addr
-        e.addWord(0xD0FF); // call eax
+        // Emit an immediate relative call with a placeholder offset.
+        // We will patch the correct offset once the thunk memory is allocated.
+        size_t callOffset = e.size();
+        e.addByte(0xE8); // call rel32
+        e.addDword(0);   // 32-bit placeholder
 
         // We must overwrite the saved EAX in the PUSHAD block with the real return value.
         // PUSHAD block is at [EBP - 36] to [EBP - 4].
         // Saved EAX is at [EBP - 8].
 
         //FIXME: ONLY EAX SUPPORT RIGHT NOW
-        if constexpr (requires { RetLoc::Location::regCode; })
+        if constexpr (requires { RetLoc::regCode; })
         {
-            if constexpr (RetLoc::Location::regCode == RegCode::EAX)
+            if constexpr (RetLoc::regCode == RegCode::EAX)
             {
                 // MOV [EBP - 8], EAX  (89 45 F8)
                 e.addByte(0x89); e.addByte(0x45); e.addByte(0xF8);
@@ -489,7 +497,21 @@ struct ThunkGenerator<Storage<RetLoc, ArgLocs...>, Signature<RetType, ArgTypes..
         e.addByte(0x5D); // pop ebp
         e.addByte(0xC3); // ret
 
-        return (FunctionType)e.finalize();
+        // Allocate memory and flush cache initially
+        uint8_t* funcMem = (uint8_t*)e.finalize();
+
+        // Calculate the actual relative offset. 
+        // Instruction pointer moves to the end of the instruction (currentIP + 5)
+        uint32_t currentIP = (uint32_t)funcMem + callOffset;
+        uint32_t relativeOffset = (uint32_t)originalFuncAddress - (currentIP + 5);
+
+        // Patch the placeholder offset in the allocated memory
+        *(uint32_t*)(funcMem + callOffset + 1) = relativeOffset;
+
+        // Ensure the CPU execution pipeline sees the patched offset
+        FlushInstructionCache(GetCurrentProcess(), funcMem + callOffset + 1, sizeof(uint32_t));
+
+        return (FunctionType)funcMem;
     }
 };
 
