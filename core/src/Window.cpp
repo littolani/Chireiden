@@ -236,7 +236,7 @@ double Window::getDeltaTime()
     return elapsedTime;
 }
 
-void Window::frame(Window* This)
+int Window::frame(Window* This)
 {
     if (((g_window.someFlag2 & 0x10) != 0) && (This->deltaTime < This->frameDeltaTime))
     {
@@ -258,7 +258,7 @@ void Window::frame(Window* This)
     if (runCalcChainResult == 0 || runCalcChainResult == -1)
     {
         g_supervisor.thread.close(&g_supervisor.thread);
-        return;
+        return -1;
     }
 
     This->frameskipCounter++;
@@ -291,6 +291,17 @@ void Window::frame(Window* This)
 
     double currentTime = getDeltaTime();
     g_supervisor.deltaTime = currentTime - This->frameDeltaTime;
+    return 0;
+}
+
+int Window::frameFrameskip(Window* This)
+{
+    return 0;
+}
+
+int Window::frameIdkWhatVariationThisIs(Window* This)
+{
+    return 0;
 }
 
 void Window::update(Window* This)

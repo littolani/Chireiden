@@ -9,9 +9,8 @@
 #include "InputManager.h"
 #include <bit>
 
-void Supervisor::initialize()
+int Supervisor::initialize()
 {
-#if 0
     g_supervisor.gameMode = -2;
     g_supervisor.gameModeToSwitchTo = 0;
     g_supervisor.idk6 = 0;
@@ -20,10 +19,11 @@ void Supervisor::initialize()
     if (!chainElem)
     {
         puts("Supervisor::initialize(): Could not allocate ChainElem\n");
-        return;
+        return -1;
     }
 
-    auto addChain = [&](int priority, ChainCallback callback, ChainCallback onRegisterCb, bool isCalcChain) -> int {
+    auto addChain = [&](int priority, ChainCallback callback, ChainCallback onRegisterCb, bool isCalcChain) -> int
+    {
         ChainElem* elem = (ChainElem*)game_new(sizeof(ChainElem));
         elem->nextNode = (ChainElem*)((uintptr_t)elem->nextNode | 3);
         elem->jobRunDrawChainCallback = callback;
@@ -33,190 +33,82 @@ void Supervisor::initialize()
 
         int res = 0;
         if (isCalcChain)
-            res = g_chain->registerCalcChain(g_chain, elem, priority);
+            res = g_chain->registerCalcChain(elem, priority);
         else
             res = g_chain->registerDrawChain(elem, priority);
         return res;
     };
 
-    int res = addChain(1, onTick, onRegister, true);
-    if (res != 0)
-    {
-        puts("Supervisor register went wrong?\n");
-        return;
-    }
-        
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw01;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 1);
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw0b;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 0xb);
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev =
-        //    (ChainElem*)onDraw0dVm0AndLayer27;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 0xd);
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw23;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 0x23);
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev =
-        //    (ChainElem*)onDraw25Vm1AndLayer28;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 0x25);
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw2e;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 0x2e);
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw2fVm2;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 0x2f);
-        //chainElem = (ChainElem*)operator_new(0x24);
-        //if (chainElem == (ChainElem*)0x0) {
-        //    chainElem = (ChainElem*)0x0;
-        //}
-        //else {
-        //    chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode & 0xfffffffe);
-        //    (chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)0x0;
-        //    chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //    chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //    (chainElem->trackerJobNodeOrjobPriority).jobPriority = 0;
-        //    (chainElem->embeddedTracker).trackerJobNode = chainElem;
-        //    (chainElem->embeddedTracker).trackerNextNode = (ChainElem*)0x0;
-        //    (chainElem->embeddedTracker).trackerPrevNode = (ChainElem*)0x0;
-        //}
-        //chainElem->nextNode = (ChainElem*)((uint)chainElem->nextNode | 3);
-        //(chainElem->jobRunDrawChainCallbackOrTrackerPrev).trackerPrev = (ChainElem*)onDraw44;
-        //chainElem->registerChainCallback = (ChainCallback*)0x0;
-        //chainElem->runCalcChainCallback = (ChainCallback*)0x0;
-        //chainElem->args = &g_supervisor;
-        //Chain::registerDrawChain(chainElem, 0x44);
-#endif
+    addChain(1, onTick, onRegister, true);
+    addChain(1, onDraw01, nullptr, false);
+    addChain(0xb, onDraw0b, nullptr, false);
+    addChain(0xd, onDraw0dVm0AndLayer27, nullptr, false);
+    addChain(0x23, onDraw23, nullptr, false);
+    addChain(0x25, onDraw25Vm1AndLayer28, nullptr, false);
+    addChain(0x2e, onDraw2e, nullptr, false);
+    addChain(0x2f, onDraw2fVm2, nullptr, false);
+    addChain(0x44, onDraw44, nullptr, false);
+    return 0;
 }
 
-void onTick(void* This)
+ChainCallbackResult Supervisor::onTick(void* This)
 {
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
 }
 
-void onRegister(void* This)
+ChainCallbackResult Supervisor::onRegister(void* This)
 {
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw01(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw0b(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw0dVm0AndLayer27(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw23(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw25Vm1AndLayer28(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw2e(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw2fVm2(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
+}
+
+ChainCallbackResult Supervisor::onDraw44(void* This)
+{
+    Supervisor* sup = reinterpret_cast<Supervisor*>(This);
+    return ChainCallbackResult::Continue;
 }
 
 void Supervisor::releaseDinputIface()

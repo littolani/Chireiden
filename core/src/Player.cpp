@@ -676,7 +676,7 @@ int Player::initialize(Player* This)
 
     chainElem->args = This;
     chainElem->nextNode = (ChainElem *)((uintptr_t)chainElem->nextNode & 0xfffffffd | 1); // Indicate job node
-    g_chain->registerCalcChain(g_chain, chainElem, 0x10);
+    g_chain->registerCalcChain(chainElem, 0x10);
     This->onTick10 = chainElem;
 
     chainElem = new ChainElem(onDraw16Stub);

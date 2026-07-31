@@ -139,12 +139,15 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
 
         installHook(0x445510, createLtoThunk<EAX, Stack<0x4>, Stack<0x8>, Stack<0xc>, Stack<0x10>>(WinMain, 0x10));
 
-        installHook(0x4540f0, createLtoThunk<Void, ESI>(AnmLoadedD3D::createTextureFromAtR, 0));
+        ///installHook(0x4540f0, createLtoThunk<Void, ESI>(AnmLoadedD3D::createTextureFromAtR, 0));
 
         //installHook(0x455a70, createLtoThunk<Void, Stack<0x4>, Stack<0x8>, Stack<0xc>, Stack<0x10>, EAX>(AsciiManager::spawnAnm, 0x10));
 
         //installHook(0x4014e0, createLtoThunk<Void, ESI, ECX, EBX>(AsciiManager::loadAsciiStrings, 0));
 
+        //installHook(0x4526f0, createLtoThunk<EAX, Stack<0x4>>(AnmManager::initialize, 0x4));
+
+#if 1
         installHook(0x44fd10, createLtoThunk<Void, ESI>(AnmManager::flushSprites, 0));
         installHook(0x44f710, createLtoThunk<Void, EAX, EDI>(AnmManager::setupRenderStateForVm, 0));
         installHook(0x44f4b0, createLtoThunk<Void, EAX, Stack<0x4>>(AnmManager::applyRenderStateForVm, 0x4));
@@ -204,7 +207,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
         installHook(0x456cb0, createLtoThunk<EAX, EBX>(Chain::runCalcChain, 0));
         installHook(0x456e10, createLtoThunk<EAX>(Chain::runDrawChain, 0));
         installHook(0x456c10, createLtoThunk<EAX, ESI, EBX>(Chain::registerDrawChain, 0));
-
+        installHook(0x456b70, createLtoThunk<EAX, ESI, EBX>(Chain::registerCalcChain, 0));
         installHook(0x45d900, createLtoThunk<EAX, ECX, Stack<0x4>>(EclManager::parse, 0x4));
         installHook(0x410d50, createLtoThunk<EAX, ECX, Stack<0x4>>(EclManager::loadInclude, 0x4));
         installHook(0x4104d0, createLtoThunk<EAX, ECX, Stack<0x4>>(EclManager::cacheAndParse, 0x4));
@@ -227,7 +230,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
 
         installHook(0x459270, createLtoThunk<EAX, ESI>(Timer::increment, 0));
 
-        installHook(0x446ae0, createLtoThunk<EAX, EBX>(Window::initialize, 0));
+        //installHook(0x446ae0, createLtoThunk<EAX, EBX>(Window::initialize, 0));
 
         //installHook(0x430290, createLtoThunk<Void, Stack<4>>(Player::move, 4));
 
@@ -235,7 +238,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
         //installHook(0x4336a0, createLtoThunk<Void, ESI>(Player::abilityDrawCallbackReimuA, 0));
 
         // installHook(0x4461f0, createLtoThunk<Void, ESI>(Window::update, 0));
-
+#endif
         // Globals
         installHook(0x458400, createLtoThunk<EAX, EAX, Stack<0x4>, Stack<0x8>>(openFile, 0x8));
         installHook(0x40b9d0, createLtoThunk<Void, ECX, Stack<0x4>, Stack<0x8>>(projectMagnitudeToVectorComponents, 0x8));

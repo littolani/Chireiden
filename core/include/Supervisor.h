@@ -1,7 +1,9 @@
 #pragma once
-#include "Chireiden.h"
+
 #include "AnmVm.h"
 #include "Camera.h"
+#include "Chireiden.h"
+#include "Chain.h"
 #include "GameConfig.h"
 #include "Thread.h"
 
@@ -110,9 +112,18 @@ public:
     static void cleanup(Supervisor* This);
     static int readKeyInput();
     static int updateJoystickState(int keyboardInput);
-    static void initialize();
-    //static ChainCallbackResult __fastcall onTick(void* This);
-    //static ChainCallbackResult __fastcall onRegister(void* This);
+    static int initialize();
+
+    static ChainCallbackResult __fastcall onTick(void* This);
+    static ChainCallbackResult __fastcall onRegister(void* This);
+    static ChainCallbackResult __fastcall onDraw01(void* This);
+    static ChainCallbackResult __fastcall onDraw0b(void* This);
+    static ChainCallbackResult __fastcall onDraw0dVm0AndLayer27(void* This);
+    static ChainCallbackResult __fastcall onDraw23(void* This);
+    static ChainCallbackResult __fastcall onDraw25Vm1AndLayer28(void* This);
+    static ChainCallbackResult __fastcall onDraw2e(void* This);
+    static ChainCallbackResult __fastcall onDraw2fVm2(void* This);
+    static ChainCallbackResult __fastcall onDraw44(void* This);
 };
 #pragma pack(pop)
 ASSERT_SIZE(Supervisor, 0x9c4);
