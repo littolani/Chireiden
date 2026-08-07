@@ -50,3 +50,4 @@ int[6][16],           g_optionFormationOffsets, 0x4a7ac8
 JOYCAPSA,             g_joyCaps,                0x4c2f08
 BulletManager*,       g_bulletManager,          0x4a8d68
 Gui*,                 g_gui,                    0x4a8d84
+Thread,               g_loadingThread,          0x4a58e4

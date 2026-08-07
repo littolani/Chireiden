@@ -137,7 +137,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
     {
         setupConsole();
 
-        installHook(0x445510, createLtoThunk<EAX, Stack<0x4>, Stack<0x8>, Stack<0xc>, Stack<0x10>>(WinMain, 0x10));
+        installHook(0x445510, createLtoThunk<EAX, Stack<0x4>, Stack<0x8>, Stack<0xc>, Stack<0x10>>(WinMain, 0));
 
         ///installHook(0x4540f0, createLtoThunk<Void, ESI>(AnmLoadedD3D::createTextureFromAtR, 0));
 
@@ -179,7 +179,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD fdwReason, LPVOID lpvReserved)
         installHook(0x45b3a0, createLtoThunk<EAX, ESI, BL, EDI>(CWaveFile::resetFile, 0));
         installHook(0x45b2d0, createLtoThunk<EAX, ECX, EAX, Stack<0x4>>(CWaveFile::reopen, 0x4));
 
-        installHook(0x449660, createLtoThunk<EAX, ECX, Stack<0x4>, EAX, EDI>(SoundManager::findRiffChunk, 0x4));
+        //installHook(0x449660, createLtoThunk<EAX, ECX, Stack<0x4>, EAX, EDI>(SoundManager::findRiffChunk, 0x4));
         installHook(0x44a1e0, createLtoThunk<Void, ESI>(SoundManager::playSoundCentered, 0));
         installHook(0x44a260, createLtoThunk<Void, Stack<0x4>, EDI>(SoundManager::playSoundWithPan, 0x4));
 

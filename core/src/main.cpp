@@ -276,11 +276,19 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     goto EngineStart;
 
 ExitOrRetry:
+    puts("Exiting\n");
     while (true)
     {
         g_soundManager.someState = 2;
-        g_soundManager.close();
-        g_soundManager.releaseSounds();
+        //g_soundManager.close();
+
+        static auto soundManager_close = reinterpret_cast<void(*)()>(0x449050);
+        soundManager_close();
+
+        static auto soundManager_releaseSounds = reinterpret_cast<void(*)()>(0x449520);
+        soundManager_releaseSounds();
+        //g_soundManager.releaseSounds();
+
 
         if (g_anmManager)
         {
@@ -365,22 +373,30 @@ EngineStart: // 0x44565a
         void* chainMem = game_new(sizeof(Chain));
         g_chain = new (chainMem) Chain();
 
-        checkJoystickAvailability();
+        //checkJoystickAvailability();
         normalizeKeyboardState();
 
         g_supervisor.flags &= ~0xC00;
 
         using Supervisor_initializeInputDevices_sto = Storage<EAX, EAX>;
-        using Supervisor_initializeInputDevices = Signature<int, Supervisor*>;
-        static auto initializeInputDevices = createCustomCallingConvention<
+        using Supervisor_initializeInputDevices_sig = Signature<int, Supervisor*>;
+        static auto Supervisor_initializeInputDevices = createCustomCallingConvention<
             Supervisor_initializeInputDevices_sto,
-            Supervisor_initializeInputDevices>(0x447ab0);
+            Supervisor_initializeInputDevices_sig>(0x447ab0);
 
-        initializeInputDevices(&g_supervisor);
+        Supervisor_initializeInputDevices(&g_supervisor);
         //Supervisor::initializeInputDevices(&g_supervisor);
 
         uint32_t ioFlags = g_supervisor.flags ^ ((uint32_t)(g_supervisor.keyboard) << 10 ^ g_supervisor.flags) & 0x400;
         g_supervisor.flags = ioFlags ^ ((uint32_t)(g_supervisor.joystick) << 11 ^ ioFlags) & 0x800;
+
+        using Thread_close_sto = Storage<Void, ESI>;
+        using Thread_close_sig = Signature<Void, Thread*>;
+        static auto Thread_close = createCustomCallingConvention<
+            Thread_close_sto,
+            Thread_close_sig>(0x459430);
+
+        Thread_close(&g_loadingThread);
 
         g_supervisor.d3dInterface0 = Direct3DCreate9(D3D_SDK_VERSION);
         if (!g_supervisor.d3dInterface0)
@@ -389,16 +405,23 @@ EngineStart: // 0x44565a
             continue;
         }
 
-        using Window_initialize_sto = Storage<EAX, EBX>;
-        using Window_initialize_sig = Signature<int, HINSTANCE>;
-        static auto Window_initialize = createCustomCallingConvention<Window_initialize_sto, Window_initialize_sig>(0x446ae0);
+        //using Window_initialize_sto = Storage<EAX, EBX>;
+        //using Window_initialize_sig = Signature<int, HINSTANCE>;
+        //static auto Window_initialize = createCustomCallingConvention<Window_initialize_sto, Window_initialize_sig>(0x446ae0);
         //int windowInitResult = Window_initialize(hInstance);
+
         int windowInitResult = g_window.initialize(hInstance);
 
         if (windowInitResult)
             continue;
 
-        g_soundManager.createThread(g_window.hwnd);
+        using SoundManager_createThread_sto = Storage<EAX, Stack<0x4>>;
+        using SoundManager_createThread_sig = Signature<int, HWND>;
+        static auto SoundManager_createThread = createCustomCallingConvention<
+            SoundManager_createThread_sto, SoundManager_createThread_sig>(0x448ff0);
+
+        SoundManager_createThread(g_window.hwnd);
+        //g_soundManager.createThread(g_window.hwnd);
 
         if (g_supervisor.initD3d9Devices(D3DFMT_UNKNOWN) != 0)
             continue;
@@ -415,7 +438,7 @@ EngineStart: // 0x44565a
         static auto AnmManager_initialize = createCustomCallingConvention<AnmManager_initialize_sto, AnmManager_initialize_sig>(0x4526f0);
         
         AnmManager_initialize(g_anmManager);
-        //g_anmManager = AnmManager::initialize(anmMem);
+        //AnmManager::initialize(g_anmManager);
         puts("AnmManager initialized\n");
 
         if (!g_supervisor.m_d3dPresetParameters.Windowed)
@@ -471,17 +494,36 @@ EngineStart: // 0x44565a
             {
                 if ((g_window.someFlag2 & 2) == 0)
                 {
+                    using window_frame_sig = Signature<int, Window*>;
+                    using window_frame_sto = Storage<EAX, Stack<0x4>>;
+
                     if ((g_window.someFlag2 & 0x10) == 0)
                     {
-                        if (g_supervisor.m_d3dPresetParameters.PresentationInterval == 1 && g_supervisor.m_gameConfig.frameSkip == 0) {
-                            engineStatus = g_window.frameIdkWhatVariationThisIs(&g_window);
+                        if (g_supervisor.m_d3dPresetParameters.PresentationInterval == 1 && g_supervisor.m_gameConfig.frameSkip == 0)
+                        {
+                            //puts("frame idk\n");
+                            static auto window_frameIdkWhatVariationThisIs = createCustomCallingConvention<window_frame_sto, window_frame_sig>(0x446650);
+                            engineStatus = window_frameIdkWhatVariationThisIs(&g_window);
+                            //engineStatus = g_window.frameIdkWhatVariationThisIs(&g_window);
                         }
-                        else {
-                            engineStatus = g_window.frameFrameskip(&g_window);
+                        else
+                        {
+                            //puts("frame skip\n");
+                            static auto window_frameskip = createCustomCallingConvention<window_frame_sto, window_frame_sig>(0x446420);
+                            engineStatus = window_frameskip(&g_window);
+                            //engineStatus = g_window.frameFrameskip(&g_window);
                         }
                     }
                     else
-                        engineStatus = g_window.frame(&g_window);
+                    {
+                        //puts("frame\n");
+                        //engineStatus = g_window.frame(&g_window);
+                        static auto window_frame = createCustomCallingConvention<window_frame_sto, window_frame_sig>(0x446080);
+                        engineStatus = window_frame(&g_window);
+                        printf("Engine status: %d\n", engineStatus);
+                        if (engineStatus == 1)
+                            break;
+                    }
 
                     if (g_window.timeForCleanup != 0)
                         break;
@@ -584,7 +626,13 @@ EngineStart: // 0x44565a
 
         if (g_chain)
         {
-            Supervisor::releaseChains();
+            using Supervisor_releaseChains_Sig = Signature<Void, Chain*>;
+            using Supervisor_releaseChains_Sto = Storage<Void, Stack<0x4>>;
+            static auto supervisor_releaseChains = createCustomCallingConvention<
+                Supervisor_releaseChains_Sto, Supervisor_releaseChains_Sig>(0x4451b0);
+
+            supervisor_releaseChains(g_chain);
+            //Supervisor::releaseChains();
             game_free(g_chain);
             g_chain = nullptr;
         }

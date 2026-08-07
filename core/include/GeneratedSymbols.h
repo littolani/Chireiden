@@ -62,3 +62,4 @@ namespace th11 {
 #define g_joyCaps (*reinterpret_cast<th11::add_pointer_t<JOYCAPSA>>(0x4c2f08))
 #define g_bulletManager (*reinterpret_cast<th11::add_pointer_t<BulletManager*>>(0x4a8d68))
 #define g_gui (*reinterpret_cast<th11::add_pointer_t<Gui*>>(0x4a8d84))
+#define g_loadingThread (*reinterpret_cast<th11::add_pointer_t<Thread>>(0x4a58e4))
